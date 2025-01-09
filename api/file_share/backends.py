@@ -7,7 +7,7 @@ class UserCredentialsBackend(ModelBackend):
             return ValueError("Neither 'username' nor 'password' can be null")
         
         try:
-            user: UserCredentials = UserCredentials.objects.get(email = username if "@" in username else None, username = username if "@" not in username else None)
+            user: UserCredentials = UserCredentials.objects.get(email = username) if "@" in username else UserCredentials.objects.get(username = username)
             if user.check_password(password):
                 return user
             

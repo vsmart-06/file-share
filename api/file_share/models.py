@@ -50,3 +50,24 @@ class UserCredentials(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
 
     objects: UserManager = UserManager()
+
+
+class UserDevices(models.Model):
+    device_id = models.AutoField(primary_key = True, unique = True, null = False)
+    identifier = models.TextField(unique = False, null = False)
+    user = models.ForeignKey(UserCredentials, related_name = "user", on_delete = models.CASCADE, null = False)
+    os = models.TextField(choices = [("ios", "ios"), ("android", "android"), ("windows", "windows"), ("macos", "macos")])
+
+
+class UserContacts(models.Model):
+    contact_id = models.AutoField(primary_key = True, unique = True, null = False)
+    first = models.ForeignKey(UserCredentials, related_name = "first", on_delete = models.CASCADE, null = False)
+    second = models.ForeignKey(UserCredentials, related_name = "second", on_delete = models.CASCADE, null = False)
+
+
+class SharedDocuments(models.Model):
+    document_id = models.AutoField(primary_key = True, unique = True, null = False)
+    sender = models.ForeignKey(UserDevices, related_name = "first", on_delete = models.CASCADE, null = False)
+    receiver = models.ForeignKey(UserDevices, related_name = "second", on_delete = models.CASCADE, null = False)
+    data = models.JSONField(unique = False, null = False)
+    time = models.TextField(unique = False, null = False)

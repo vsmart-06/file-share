@@ -67,7 +67,7 @@ def login(request: HttpRequest):
     if user:
         return JsonResponse({"message": "User successfully logged in", "user_id": user.user_id})
     
-    return JsonResponse({"error": "Email or password is incorrect"}, status = 400)
+    return JsonResponse({"error": "Username or password is incorrect"}, status = 400)
 
 @csrf_exempt
 def check_code(request: HttpRequest):
