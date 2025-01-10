@@ -2,8 +2,10 @@ import "package:flutter/material.dart";
 import "package:file_share/services/secure_storage.dart";
 import "package:http/http.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:device_info_plus/device_info_plus.dart";
 import "dart:core";
 import "dart:convert";
+import "dart:io";
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -32,8 +34,9 @@ class _LoginState extends State<Login> {
   }
 
   void login() async {
+    List<String> deviceInfo = await getDeviceInfo();
     var response = await post(Uri.parse(baseUrl + "/login/"),
-        body: {"username": username, "password": password});
+        body: {"username": username, "password": password, "device_id": deviceInfo[0], "device_name": deviceInfo[1], "platform": deviceInfo[2]});
 
     var info = jsonDecode(response.body);
 
@@ -62,10 +65,21 @@ class _LoginState extends State<Login> {
     if (info["user_id"] != null) {await Navigator.popAndPushNamed(context, "/home");}
   }
 
+  Future<List<String>> getDeviceInfo() async {
+    List<String> data = [];
+    var deviceInfo = DeviceInfoPlugin();
+    if (Platform.isWindows) {
+      var info = await deviceInfo.windowsInfo;
+      data = [info.deviceId, info.computerName, "windows"];
+    }
+    return data;
+  }
+
   @override
   void initState() {
     super.initState();
     checkLogin();
+    getDeviceInfo();
   }
 
   @override

@@ -1,41 +1,26 @@
 import "dart:convert";
+
 import "package:file_share/services/secure_storage.dart";
-import "package:file_share/widgets/logout_button.dart";
 import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
-import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:http/http.dart";
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+class ContactsPage extends StatefulWidget {
+  const ContactsPage({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<ContactsPage> createState() => _ContactsPageState();
 }
 
-class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+class _ContactsPageState extends State<ContactsPage> {
   late int user_id;
-  bool login = false;
 
-  List devices = [];
   List contacts = [];
 
   String? primaryFont = GoogleFonts.redHatDisplay().fontFamily;
-  late TabController controller;
 
   String baseUrl = "http://127.0.0.1:8000/file_share";
 
-  Future<void> getDevices() async {
-    var response = await post(Uri.parse(baseUrl + "/get-devices/"),
-        body: {"user_id": user_id.toString()});
-
-    var info = jsonDecode(response.body)["data"];
-
-    setState(() {
-      devices = info;
-    });
-  }
-  
   Future<void> getContacts() async {
     var response = await post(Uri.parse(baseUrl + "/get-contacts/"),
         body: {"user_id": user_id.toString()});
@@ -45,57 +30,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     setState(() {
       contacts = info;
     });
-  }
-
-  Widget deviceCard(String name, String platform, int count) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Row(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: Icon((platform == "ios")
-                ? Icons.phone_iphone_outlined
-                : (platform == "android")
-                    ? Icons.phone_android_outlined
-                    : (platform == "macos")
-                        ? Icons.laptop_mac_outlined
-                        : Icons.desktop_windows_outlined),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        name + ((count != 0) ? " (${count})" : ""),
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontFamily: primaryFont,
-                        ),
-                      ),
-                      Text(
-                        "Platform: ${platform}",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontFamily: primaryFont,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget contactCard(String username, String email, String status) {
@@ -156,21 +90,23 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget devicesPage() {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: devices
-            .map(
-              (e) => deviceCard(e["name"], e["platform"], e["count"]),
-            )
-            .toList(),
-      ),
-    );
+  Future<void> loadUserId() async {
+    String? num = await SecureStorage.read("user_id");
+    setState(() {
+      user_id = int.parse(num!);
+    });
+    await getContacts();
   }
 
-  Widget contactsPage() {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadUserId();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -254,85 +190,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           )
         ],
       ),
-    );
-  }
-
-
-  Future<bool> checkLogin() async {
-    Map<String, String> info = await SecureStorage.read();
-    if (info["last_login"] != null) {
-      DateTime date = DateTime.parse(info["last_login"]!);
-      if (DateTime.now().subtract(Duration(days: 30)).compareTo(date) >= 0) {
-        return false;
-      }
-    }
-    return (info["user_id"] != null);
-  }
-
-  Future<void> loadUserId() async {
-    if (await checkLogin()) {
-      String? num = await SecureStorage.read("user_id");
-      setState(() {
-        user_id = int.parse(num!);
-        login = true;
-      });
-      getDevices();
-      getContacts();
-    } else {
-      await SecureStorage.delete();
-      Navigator.pushNamedAndRemoveUntil(context, "/", (route) => route == "/");
-    }
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    loadUserId();
-    controller = TabController(length: 3, vsync: this);
-    controller.addListener(() => setState(() {}));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!login)
-      return Scaffold(body: Center(child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100)));
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Home", style: TextStyle(fontFamily: primaryFont)),
-        centerTitle: true,
-        actions: [LogoutButton()],
-        bottom: TabBar(
-          controller: controller,
-          tabs: [
-            Tab(
-                child: Text(
-              "Devices",
-              style: TextStyle(fontFamily: primaryFont),
-            )),
-            Tab(
-                child: Text(
-              "Contacts",
-              style: TextStyle(fontFamily: primaryFont),
-            )),
-            Tab(
-                child: Text(
-              "Documents",
-              style: TextStyle(fontFamily: primaryFont),
-            )),
-          ],
-        ),
-      ),
-      body: TabBarView(controller: controller, children: [
-        devicesPage(),
-        contactsPage(),
-        Container()
-      ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: IconButton(onPressed: () {}, icon: Icon(Icons.upload)),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

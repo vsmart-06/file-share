@@ -55,14 +55,16 @@ class UserCredentials(AbstractBaseUser, PermissionsMixin):
 class UserDevices(models.Model):
     device_id = models.AutoField(primary_key = True, unique = True, null = False)
     identifier = models.TextField(unique = False, null = False)
+    name = models.TextField(unique = False, null = False)
     user = models.ForeignKey(UserCredentials, related_name = "user", on_delete = models.CASCADE, null = False)
-    os = models.TextField(choices = [("ios", "ios"), ("android", "android"), ("windows", "windows"), ("macos", "macos")])
+    platform = models.TextField(choices = [("ios", "ios"), ("android", "android"), ("windows", "windows"), ("macos", "macos"), ("linux", "linux")])
 
 
 class UserContacts(models.Model):
     contact_id = models.AutoField(primary_key = True, unique = True, null = False)
     first = models.ForeignKey(UserCredentials, related_name = "first", on_delete = models.CASCADE, null = False)
     second = models.ForeignKey(UserCredentials, related_name = "second", on_delete = models.CASCADE, null = False)
+    approved = models.BooleanField(default = False, null = False)
 
 
 class SharedDocuments(models.Model):
