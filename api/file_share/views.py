@@ -178,10 +178,12 @@ def get_contacts(request: HttpRequest):
     data = []
 
     for contact in contacts:
-        if contact["first"].user_id == user_id:
-            data.append({"username": contact["second"].username, "email": contact["second"].email, "status": "approved" if contact["approved"] else "outgoing"})
+        first: UserCredentials = UserCredentials.objects.get(user_id = contact["first_id"])
+        second: UserCredentials = UserCredentials.objects.get(user_id = contact["second_id"])
+        if first.user_id == user_id:
+            data.append({"username": second.username, "email": second.email, "status": "approved" if contact["approved"] else "outgoing"})
         else:
-            data.append({"username": contact["first"].username, "email": contact["first"].email, "status": "approved" if contact["approved"] else "incoming"})
+            data.append({"username": first.username, "email": first.email, "status": "approved" if contact["approved"] else "incoming"})
     
     return JsonResponse({"data": data})
 

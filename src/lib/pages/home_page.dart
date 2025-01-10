@@ -48,6 +48,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget deviceCard(String name, String platform, int count) {
+    platform = platform[0].toUpperCase() + platform.substring(1);
+    platform = platform.replaceAll("os", "OS");
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Row(
@@ -201,7 +203,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   ? error
                                   : null),
                           style: TextStyle(fontFamily: primaryFont),
-                          obscureText: true,
                           onChanged: (value) {
                             setDialogState(() {
                               user = value;
