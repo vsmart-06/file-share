@@ -153,9 +153,36 @@ def get_devices(request: HttpRequest):
 
     data = []
     for x in devices:
-        data.append({"name": x["name"], "platform": x["platform"], "count": data.count(x["name"])})
+        data.append({"id": x["device_id"], "identifier": x["identifier"], "name": x["name"], "platform": x["platform"], "count": data.count(x["name"])})
     
     return JsonResponse({"data": data})
+
+@csrf_exempt
+def modify_device(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "This endpoint can only be accessed via POST"}, status = 400)
+    
+    try:
+        device_id = int(request.POST.get("device_id"))
+    except:
+        return JsonResponse({"error": "'device_id' field is required"}, status = 400)
+    
+    change = request.POST.get("change")
+    name = request.POST.get("name")
+
+    try:
+        device = UserDevices.objects.get(device_id = device_id)
+    except:
+        return JsonResponse({"error": "A device with that device ID does not exist"}, status = 400)
+
+    if change == "remove":
+        device.delete()
+    else:
+        device.name = name
+        device.save()
+    
+    return JsonResponse({"message": "Device modified successfully"})
+
 
 @csrf_exempt
 def get_contacts(request: HttpRequest):
@@ -209,7 +236,52 @@ def add_contact(request: HttpRequest):
     except:
         return JsonResponse({"error": f"A user with this {'email' if '@' in name else 'username'} does not exist"}, status = 400)
     
-    record = UserContacts(first = first, second = second)
-    record.save()
+    if first == second:
+        return JsonResponse({"error": "You cannot create a contact with yourself"}, status = 400)
+
+    try:
+        UserContacts.objects.get(Q(first = first, second = second) | Q(first = second, second = first))
+        return JsonResponse({"error": "A contact with this user already exists"}, status = 400)
+    except:
+        record = UserContacts(first = first, second = second)
+        record.save()
 
     return JsonResponse({"message": "Contact request sent successfully"})
+
+@csrf_exempt
+def modify_contact(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "This endpoint can only be accessed via POST"}, status = 400)
+    
+    try:
+        user_id = int(request.POST.get("user_id"))
+    except:
+        return JsonResponse({"error": "'user_id' field is required"}, status = 400)
+    
+    username = request.POST.get("username")
+    change = request.POST.get("change")
+
+    try:
+        first: UserCredentials = UserCredentials.objects.get(user_id = user_id)
+    except:
+        return JsonResponse({"error": "A user with that user ID does not exist"}, status = 400)
+    
+    try:
+        second: UserCredentials = UserCredentials.objects.get(username = username)
+    except:
+        return JsonResponse({"error": f"A user with this username does not exist"}, status = 400)
+    
+    try:
+        contact = UserContacts.objects.get(Q(first = first, second = second) | Q(first = second, second = first))
+    except:
+        return JsonResponse({"error": "The contact does not exist"}, status = 400)
+
+    if change == "Accept":
+        contact.approved = True
+        contact.save()
+    elif change != "Delete" and contact.approved:
+        return JsonResponse({"error": "This contact cannot be declined or withdrawn"}, status = 400)
+    else:
+        contact.delete()
+    
+    return JsonResponse({"message": "Contact modified successfully"})

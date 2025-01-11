@@ -93,7 +93,8 @@ class _SignupState extends State<Signup> {
                     labelText: "Username",
                     hintText: "Username",
                     border: OutlineInputBorder(),
-                    errorText: errors[0] ? "Invalid username" : null
+                    errorText: errors[0] ? "Invalid username" : null,
+                    errorStyle: TextStyle(fontFamily: primaryFont)
                   ),
                   style: TextStyle(fontFamily: primaryFont),
                   autofocus: true,
@@ -111,7 +112,8 @@ class _SignupState extends State<Signup> {
                     labelText: "Email",
                     hintText: "Email",
                     border: OutlineInputBorder(),
-                    errorText: errors[1] ? "Invalid email" : null
+                    errorText: errors[1] ? "Invalid email" : null,
+                    errorStyle: TextStyle(fontFamily: primaryFont)
                   ),
                   style: TextStyle(fontFamily: primaryFont),
                   onChanged: (value) {
@@ -128,7 +130,8 @@ class _SignupState extends State<Signup> {
                     labelText: "Password",
                     hintText: "Password",
                     border: OutlineInputBorder(),
-                    errorText: errors[2] ? "Invalid password" : null),
+                    errorText: errors[2] ? "Invalid password" : null,
+                    errorStyle: TextStyle(fontFamily: primaryFont)),
                     style: TextStyle(fontFamily: primaryFont),
                   obscureText: true,
                   onChanged: (value) {

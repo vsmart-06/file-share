@@ -79,7 +79,6 @@ class _LoginState extends State<Login> {
   void initState() {
     super.initState();
     checkLogin();
-    getDeviceInfo();
   }
 
   @override
@@ -102,7 +101,8 @@ class _LoginState extends State<Login> {
                     labelText: "Username or email",
                     hintText: "Username or email",
                     border: OutlineInputBorder(),
-                    errorText: errors[0] ? "Username/email cannot be empty" : null
+                    errorText: errors[0] ? "Username/email cannot be empty" : null,
+                    errorStyle: TextStyle(fontFamily: primaryFont)
                   ),
                   style: TextStyle(fontFamily: primaryFont),
                   autofocus: true,
@@ -120,7 +120,8 @@ class _LoginState extends State<Login> {
                     labelText: "Password",
                     hintText: "Password",
                     border: OutlineInputBorder(),
-                    errorText: errors[1] ? "Password cannot be empty" : null
+                    errorText: errors[1] ? "Password cannot be empty" : null,
+                    errorStyle: TextStyle(fontFamily: primaryFont)
                   ),
                   style: TextStyle(fontFamily: primaryFont),
                   obscureText: true,

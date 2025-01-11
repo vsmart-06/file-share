@@ -111,7 +111,8 @@ class _OtpPageState extends State<OtpPage> {
                     labelText: "OTP",
                     hintText: "OTP",
                     border: OutlineInputBorder(),
-                    errorText: (error == true && errorText == null) ? "Code has to be 6 digits long" : null
+                    errorText: (error == true && errorText == null) ? "Code has to be 6 digits long" : null,
+                    errorStyle: TextStyle(fontFamily: primaryFont)
                   ),
                   style: TextStyle(fontFamily: primaryFont),
                   autofocus: true,
