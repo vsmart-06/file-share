@@ -78,7 +78,38 @@ def login(request: HttpRequest):
         try:
             UserDevices.objects.get(identifier = device_id, user = user, platform = platform)
         except:
-            device = UserDevices(identifier = device_id, user = user, name = device_name, platform = platform)
+            d = UserDevices.objects.filter(user = user).filter(Q(name = device_name) | Q(name__startswith = device_name + " (", name__endswith = ")")).only("name")
+            devices = list(d.values())
+            if devices == []:
+                device = UserDevices(identifier = device_id, user = user, name = device_name, platform = platform)
+            else:
+                names = []
+                for x in devices:
+                    n: str = x["name"]
+                    if n == device_name:
+                        names.append(0)
+                    else:
+                        n = n.replace(device_name + " (", "", 1)[:-1]
+                        try:
+                            n = int(n)
+                            names.append(n)
+                        except:
+                            continue
+                
+                names = list(set(names))
+                names.sort()
+
+                if names[-1] == len(names) - 1:
+                    device = UserDevices(identifier = device_id, user = user, name = device_name + f" ({names[-1]+1})", platform = platform)
+                else:
+                    c = 0
+                    for i in names:
+                        if i != c:
+                            break
+                        c += 1
+                    
+                    device = UserDevices(identifier = device_id, user = user, name = device_name + f" ({c})", platform = platform)
+
             device.save()
 
         return JsonResponse({"message": "User successfully logged in", "user_id": user.user_id})
@@ -148,12 +179,8 @@ def get_devices(request: HttpRequest):
     except:
         return JsonResponse({"error": "A user with that user ID does not exist"}, status = 400)
 
-    records = UserDevices.objects.filter(user = user)
-    devices = list(records.values())
-
-    data = []
-    for x in devices:
-        data.append({"id": x["device_id"], "identifier": x["identifier"], "name": x["name"], "platform": x["platform"], "count": data.count(x["name"])})
+    records = UserDevices.objects.filter(user = user).defer("user")
+    data = list(records.values())
     
     return JsonResponse({"data": data})
 

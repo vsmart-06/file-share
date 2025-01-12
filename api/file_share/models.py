@@ -69,7 +69,8 @@ class UserContacts(models.Model):
 
 class SharedDocuments(models.Model):
     document_id = models.AutoField(primary_key = True, unique = True, null = False)
-    sender = models.ForeignKey(UserDevices, related_name = "first", on_delete = models.CASCADE, null = False)
-    receiver = models.ForeignKey(UserDevices, related_name = "second", on_delete = models.CASCADE, null = False)
+    sender = models.ForeignKey(UserDevices, related_name = "sender", on_delete = models.CASCADE, null = False)
+    receiver_device = models.ForeignKey(UserDevices, related_name = "receiver_device", on_delete = models.CASCADE, null = True)
+    receiver_contact = models.ForeignKey(UserContacts, related_name = "receiver_contact", on_delete = models.CASCADE, null = True)
     data = models.JSONField(unique = False, null = False)
     time = models.TextField(unique = False, null = False)
