@@ -1,6 +1,7 @@
 import "dart:convert";
 import "dart:io";
 import "dart:math";
+import "package:archive/archive_io.dart";
 import "package:device_info_plus/device_info_plus.dart";
 import "package:file_share/services/secure_storage.dart";
 import "package:file_share/widgets/logout_button.dart";
@@ -10,6 +11,7 @@ import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:http/http.dart";
 import "package:file_picker/file_picker.dart";
 import "package:image_picker/image_picker.dart";
+import "package:archive/archive.dart";
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -25,6 +27,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   List? devices;
   List? contacts;
   List? documents;
+  bool gettingContacts = false;
+  bool gettingDocuments = false;
   List<String> deviceInfo = [];
 
   bool deviceChange = false;
@@ -276,6 +280,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Future<void> getContacts() async {
+    setState(() {
+      gettingContacts = true;
+    });
+
     var response = await post(Uri.parse(baseUrl + "/get-contacts/"),
         body: {"user_id": user_id.toString()});
 
@@ -283,6 +291,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
     setState(() {
       contacts = info;
+      gettingContacts = false;
     });
   }
 
@@ -546,20 +555,42 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)))),
             ),
-          )
+          ),
+          (gettingContacts) ? Padding(
+                        padding: const EdgeInsets.all(30.0),
+                        child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
+                      ) : Container()
         ],
       ),
     );
   }
 
   Future<void> getDocuments() async {
+    setState(() {
+      gettingDocuments = true;
+    });
+
     var response = await post(Uri.parse(baseUrl + "/get-documents/"),
         body: {"user_id": user_id.toString(), "identifier": deviceInfo[0]});
 
-    var info = jsonDecode(response.body)["data"];
+    List info = jsonDecode(response.body)["data"];
+
+    info = info.map((e) {
+      var files = ZipDecoder().decodeBytes(base64Decode(e["documents"]));
+      List unzipped = [];
+      for (var file in files) {
+        if (file.isFile) {
+          unzipped.add({"name": file.name, "bytes": base64Encode(file.readBytes()!.toList())});
+        }
+      }
+      e["documents"] = unzipped;
+      return e;
+    }).toList();
+    
 
     setState(() {
       documents = info;
+      gettingDocuments = false;
     });
   }
 
@@ -749,7 +780,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     (e) => documentCard(e["document_id"], e["status"],
                         e["second"], e["is_device"], e["documents"], e["time"]),
                   )
-                  .toList(),
+                  .toList() + [(gettingDocuments) ? Padding(
+                    padding: const EdgeInsets.all(30.0),
+                    child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
+                  ) : Container()],
             ),
           );
   }
@@ -954,6 +988,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   Map files = {};
                   String fileError = "";
 
+                  bool sendingFile = false;
+
                   TextEditingController controller = TextEditingController();
                   return StatefulBuilder(
                       builder: (stateContext, setDialogState) => AlertDialog(
@@ -1041,7 +1077,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       FilePickerResult? result =
                                           await FilePicker.platform.pickFiles(
                                               withData: true,
-                                              allowMultiple: true);
+                                              allowMultiple: true,
+                                              lockParentWindow: true);
 
                                       if (result != null) {
                                         for (var f in result.files) {
@@ -1171,7 +1208,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                               color: Colors.red),
                                         ),
                                       )
-                                    : Container()
+                                    : Container(),
+                                (sendingFile) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
                               ],
                             ),
                             actions: [
@@ -1215,13 +1253,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     return;
                                   }
 
+                                  setDialogState(() {sendingFile = true;});
+
+                                  Archive archive = Archive();
+                                  for (String file in files.keys) {
+                                    archive.addFile(ArchiveFile(file, files[file].length, files[file]));
+                                  }
+                                  var zipBytes = ZipEncoder().encode(archive);
+
                                   var request = MultipartRequest("POST",
                                       Uri.parse(baseUrl + "/share-documents/"));
-                                  for (String file in files.keys) {
-                                    request.files.add(MultipartFile.fromBytes(
-                                        file, files[file],
-                                        filename: file));
-                                  }
+                                  request.files.add(MultipartFile.fromBytes("zipped_file", zipBytes, filename: "zipped_file.zip"));
 
                                   request.fields["user_id"] =
                                       user_id.toString();
@@ -1240,6 +1282,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       textError = "";
                                       fileError =
                                           jsonDecode(response.body)["error"];
+                                      sendingFile = false;
                                     });
                                   } else {
                                     Navigator.of(dialogContext).pop();

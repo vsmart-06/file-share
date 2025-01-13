@@ -358,9 +358,8 @@ def share_documents(request: HttpRequest):
         except:
             return JsonResponse({"error": f"A user with this username does not exist"}, status = 400)
         
+    files = {"documents": base64.b64encode(request.FILES.get("zipped_file").read()).decode()}
 
-    files = {"documents": [{"name": file, "bytes": base64.b64encode(request.FILES.get(file).read()).decode()} for file in request.FILES]}
-    
     share = SharedDocuments(sender_device = sender, sender_contact = user, data = files, timestamp = datetime.datetime.now(tz = datetime.timezone.utc))
     if device_id:
         share.recipient_device = recipient_device
@@ -407,7 +406,7 @@ def get_documents(request: HttpRequest):
             device = True
 
         data.append({"document_id": x["document_id"], "status": "outgoing" if x["sender_device_id"] == user_device.device_id else "incoming", "second": second, "is_device": device, "documents": x["data"]["documents"], "time": x["timestamp"].strftime("%Y-%m-%d %H:%M:%S %z")})
-    
+
     return JsonResponse({"data": data})
 
 @csrf_exempt
