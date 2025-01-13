@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
             except:
                 break
 
-        user: UserCredentials = self.model(username = username, email = email, time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), code = code, **kwargs)
+        user: UserCredentials = self.model(username = username, email = email, time = datetime.datetime.now(tz = datetime.timezone.utc), code = code, **kwargs)
         user.set_password(password)
 
         try:
@@ -43,7 +43,7 @@ class UserCredentials(AbstractBaseUser, PermissionsMixin):
     username = models.TextField(unique = True, null = False)
     email = models.EmailField(unique = True, null = False)
     code = models.TextField(unique = True, null = True)
-    time = models.TextField(unique = False, null = True)
+    timestamp = models.DateTimeField(unique = False, null = True)
     verified = models.BooleanField(default = False, null = False)
     is_staff = models.BooleanField(default = False, null = False)
 
@@ -69,8 +69,10 @@ class UserContacts(models.Model):
 
 class SharedDocuments(models.Model):
     document_id = models.AutoField(primary_key = True, unique = True, null = False)
-    sender = models.ForeignKey(UserDevices, related_name = "sender", on_delete = models.CASCADE, null = False)
-    receiver_device = models.ForeignKey(UserDevices, related_name = "receiver_device", on_delete = models.CASCADE, null = True)
-    receiver_contact = models.ForeignKey(UserContacts, related_name = "receiver_contact", on_delete = models.CASCADE, null = True)
+    sender_device = models.ForeignKey(UserDevices, related_name = "sender_device", on_delete = models.CASCADE, null = False)
+    sender_contact = models.ForeignKey(UserCredentials, related_name = "sender_contact", on_delete = models.CASCADE, null = False)
+    recipient_device = models.ForeignKey(UserDevices, related_name = "receiver_device", on_delete = models.CASCADE, null = True)
+    recipient_contact = models.ForeignKey(UserCredentials, related_name = "receiver_contact", on_delete = models.CASCADE, null = True)
     data = models.JSONField(unique = False, null = False)
-    time = models.TextField(unique = False, null = False)
+    opened = models.BooleanField(unique = False, default = False, null = False)
+    timestamp = models.DateTimeField(unique = False, null = False)

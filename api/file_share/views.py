@@ -1,3 +1,4 @@
+import base64
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
@@ -5,6 +6,7 @@ from django.db.models import Q
 from file_share.models import *
 import smtplib
 from email.mime.text import MIMEText
+import datetime
 import os
 from dotenv import load_dotenv
 
@@ -312,3 +314,134 @@ def modify_contact(request: HttpRequest):
         contact.delete()
     
     return JsonResponse({"message": "Contact modified successfully"})
+
+@csrf_exempt
+def share_documents(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "This endpoint can only be accessed via POST"}, status = 400)
+    
+    try:
+        user_id = int(request.POST.get("user_id"))
+    except:
+        return JsonResponse({"error": "'user_id' field is required"}, status = 400)
+    
+    identifier = request.POST.get("identifier")
+    device_id = request.POST.get("device_id")
+    username = request.POST.get("username")
+
+    if not identifier:
+        return JsonResponse({"error": "'identifier' field is required"}, status = 400)
+
+    if not device_id and not username:
+        return JsonResponse({"error": "Either 'device_id' or 'username' is required"}, status = 400)
+
+    try:
+        device_id = int(device_id)
+    except:
+        pass
+
+    try:
+        user: UserCredentials = UserCredentials.objects.get(user_id = user_id)
+        sender: UserDevices = UserDevices.objects.get(user = user, identifier = identifier)
+    except:
+        return JsonResponse({"error": "A user with that user ID does not exist"}, status = 400)
+    
+    if device_id:
+        try:
+            recipient_device: UserDevices = UserDevices.objects.get(device_id = device_id)
+        except:
+            return JsonResponse({"error": "A device with that device ID does not exist"}, status = 400)
+    
+    else:
+        try:
+            recipient_contact: UserCredentials = UserCredentials.objects.get(Q(username = username) | Q(email = username))
+        except:
+            return JsonResponse({"error": f"A user with this username does not exist"}, status = 400)
+        
+
+    files = {"documents": [{"name": file, "bytes": base64.b64encode(request.FILES.get(file).read()).decode()} for file in request.FILES]}
+    
+    share = SharedDocuments(sender_device = sender, sender_contact = user, data = files, timestamp = datetime.datetime.now(tz = datetime.timezone.utc))
+    if device_id:
+        share.recipient_device = recipient_device
+    else:
+        share.recipient_contact = recipient_contact
+    
+    share.save()
+
+    return JsonResponse({"message": "Files share successfully"})
+
+@csrf_exempt
+def get_documents(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "This endpoint can only be accessed via POST"}, status = 400)
+    
+    records = SharedDocuments.objects.filter(Q(opened = False, timestamp__lte = (datetime.datetime.now(tz = datetime.timezone.utc) - datetime.timedelta(minutes = 10))) | Q(opened = True, timestamp__lte = (datetime.datetime.now(tz = datetime.timezone.utc) - datetime.timedelta(minutes = 5))))
+    records.delete()
+
+    try:
+        user_id = int(request.POST.get("user_id"))
+    except:
+        return JsonResponse({"error": "'user_id' field is required"}, status = 400)
+    
+    identifier = request.POST.get("identifier")
+
+    try:
+        user_contact: UserCredentials = UserCredentials.objects.get(user_id = user_id)
+        user_device: UserDevices = UserDevices.objects.get(user = user_contact, identifier = identifier)
+    except:
+        return JsonResponse({"error": "A user with that user ID does not exist"}, status = 400)
+
+    records = SharedDocuments.objects.filter(Q(recipient_device = user_device) | Q(recipient_contact = user_contact) | Q(sender_device = user_device) | Q(sender_contact = user_contact, recipient_device = None))
+    documents = list(records.values())
+
+    data = []
+    for x in documents:
+        if x["recipient_contact_id"]:
+            a: UserCredentials = UserCredentials.objects.get(user_id = x["recipient_contact_id"] if user_contact.user_id != x["recipient_contact_id"] else x["sender_contact_id"])
+            second = a.username
+            device = False
+        else:
+            b: UserDevices = UserDevices.objects.get(device_id = x["recipient_device_id"] if user_device.device_id != x["recipient_device_id"] else x["sender_device_id"])
+            second = b.name
+            device = True
+
+        data.append({"document_id": x["document_id"], "status": "outgoing" if x["sender_device_id"] == user_device.device_id else "incoming", "second": second, "is_device": device, "documents": x["data"]["documents"], "time": x["timestamp"].strftime("%Y-%m-%d %H:%M:%S %z")})
+    
+    return JsonResponse({"data": data})
+
+@csrf_exempt
+def open_document(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "This endpoint can only be accessed via POST"}, status = 400)
+
+    try:
+        document_id = int(request.POST.get("document_id"))
+        document: SharedDocuments = SharedDocuments.objects.get(document_id = document_id)
+    except ValueError:
+        return JsonResponse({"error": "'document_id' field is required"}, status = 400)
+    except:
+        return JsonResponse({"error": "A document with that document ID does not exist"}, status = 400)
+    
+    document.opened = True
+    document.save()
+
+    return JsonResponse({"message": "Document opened successfully"})
+
+@csrf_exempt
+def delete_document(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "This endpoint can only be accessed via POST"}, status = 400)
+    
+    try:
+        document_id = int(request.POST.get("document_id"))
+        document: SharedDocuments = SharedDocuments.objects.get(document_id = document_id)
+    except ValueError:
+        return JsonResponse({"error": "'document_id' field is required"}, status = 400)
+    except:
+        return JsonResponse({"error": "A document with that document ID does not exist"}, status = 400)
+    
+    document.delete()
+
+    return JsonResponse({"message": "Document deleted successfully"})
+    

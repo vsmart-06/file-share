@@ -1,2 +1,3 @@
 a = {"a": "b"}
-print("b" in a)
+for x, y in a:
+    print(x, y)
