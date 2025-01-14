@@ -27,6 +27,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   List? devices;
   List? contacts;
   List? documents;
+  bool gettingDevices = false;
   bool gettingContacts = false;
   bool gettingDocuments = false;
   List<String> deviceInfo = [];
@@ -42,6 +43,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   String baseUrl = "http://127.0.0.1:8000/file_share";
 
   Future<void> getDevices() async {
+    setState(() {
+      gettingDevices = true;
+    });
+
     var response = await post(Uri.parse(baseUrl + "/get-devices/"),
         body: {"user_id": user_id.toString()});
 
@@ -49,6 +54,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
     setState(() {
       devices = info;
+      gettingDevices = false;
     });
   }
 
@@ -104,21 +110,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget deviceCard(
       int device_id, String identifier, String name, String platform) {
-    platform = platform[0].toUpperCase() + platform.substring(1);
-    platform = platform.replaceAll("os", "OS");
+    if (platform != "ios" && platform != "macos") platform = platform[0].toUpperCase() + platform.substring(1);
+    else platform = platform.replaceAll("os", "OS");
     return Padding(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
       child: Row(
         children: [
           Padding(
             padding: EdgeInsets.all(10),
-            child: Icon((platform == "ios")
+            child: Icon((platform == "iOS")
                 ? Icons.phone_iphone_outlined
-                : (platform == "android")
+                : (platform == "Android")
                     ? Icons.phone_android_outlined
-                    : (platform == "macos")
+                    : (platform == "macOS")
                         ? Icons.laptop_mac_outlined
-                        : Icons.desktop_windows_outlined),
+                        : (platform == "Windows") ? Icons.desktop_windows_outlined : Icons.laptop),
           ),
           Expanded(
             child: Padding(
@@ -148,8 +154,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 style: TextStyle(fontFamily: primaryFont),
                               ),
                               content: (!rename)
-                                  ? Text("Name: ${name}\nPlatform: ${platform}",
-                                      style: TextStyle(fontFamily: primaryFont))
+                                  ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Text("Name: ${name}\nPlatform: ${platform}",
+                                            style: TextStyle(fontFamily: primaryFont)),
+                                      ),
+                                      (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
+                                    ],
+                                  )
                                   : Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -278,7 +293,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               (e) => deviceCard(
                   e["device_id"], e["identifier"], e["name"], e["platform"]),
             )
-            .toList(),
+            .toList() + [(gettingDevices) ? Padding(
+                        padding: const EdgeInsets.all(30.0),
+                        child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
+                      ) : Container()],
       ),
     );
   }
@@ -344,7 +362,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Widget contactCard(String username, String email, String status) {
     return Padding(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
       child: Row(
         children: [
           Padding(
