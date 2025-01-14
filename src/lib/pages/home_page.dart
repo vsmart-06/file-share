@@ -11,6 +11,7 @@ import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:http/http.dart";
 import "package:file_picker/file_picker.dart";
 import "package:image_picker/image_picker.dart";
+import "package:gal/gal.dart";
 import "package:archive/archive.dart";
 
 class Home extends StatefulWidget {
@@ -746,17 +747,25 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                 ),
                                                 IconButton(
                                                   onPressed: () async {
+                                                    String name = file["name"];
+
                                                     var bytes =
                                                         base64Decode(file["bytes"]);
+
+                                                    if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
+                                                      await Gal.putImageBytes(bytes);
+                                                      return;
+                                                    }
+
                                                     String? path = await FilePicker
                                                         .platform
                                                         .saveFile(
                                                             dialogTitle: "Save File",
-                                                            fileName: file["name"],
+                                                            fileName: name,
                                                             bytes: bytes,
                                                             lockParentWindow: true);
                                                               
-                                                    if (path != null) {
+                                                    if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
                                                       XFile f = XFile.fromData(bytes);
                                                       f.saveTo(path);
                                                     }
@@ -986,6 +995,22 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     if (Platform.isWindows) {
       var info = await dInfo.windowsInfo;
       data = [info.deviceId, info.computerName, "windows"];
+    }
+    else if (Platform.isIOS) {
+      var info = await dInfo.iosInfo;
+      data = [info.identifierForVendor!, info.name, "ios"];
+    }
+    else if (Platform.isAndroid) {
+      var info = await dInfo.androidInfo;
+      data = [info.id, info.product, "android"];
+    }
+    else if (Platform.isMacOS) {
+      var info = await dInfo.macOsInfo;
+      data = [info.systemGUID!, info.computerName, "macos"];
+    }
+    else {
+      var info = await dInfo.linuxInfo;
+      data = [info.machineId!, info.prettyName, "linux"];
     }
     setState(() {
       deviceInfo = data;
