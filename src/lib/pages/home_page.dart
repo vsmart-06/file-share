@@ -61,9 +61,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           return;
         }
         if (action == "Confirm" && name.length < 3) {
-          renameFunction("The new name is too short", true);
+          renameFunction("The new name is too short");
           return;
         }
+        renameFunction();
         await post(Uri.parse(baseUrl + "/modify-device/"), body: {
           "device_id": device_id.toString(),
           "change": (action == "Confirm") ? "rename" : "remove",
@@ -136,6 +137,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           bool rename = false;
                           String newName = "";
                           String error = "";
+                          bool acted = false;
                           return StatefulBuilder(
                             builder: (stateContext, setDialogState) =>
                                 AlertDialog(
@@ -179,9 +181,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                             },
                                           ),
                                         ),
+                                        (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
                                       ],
                                     ),
-                              actions: (!rename)
+                              actions: (acted) ? [] : (!rename)
                                   ? (identifier != deviceInfo[0])
                                       ? [
                                           deviceAction(
@@ -189,7 +192,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                               device_id,
                                               deviceInfo[1],
                                               dialogContext,
-                                              () {}),
+                                              () {setDialogState(() {acted = true;});}),
                                           deviceAction("Rename", device_id,
                                               deviceInfo[1], dialogContext, () {
                                             setDialogState(() {
@@ -209,10 +212,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         ]
                                   : [
                                       deviceAction("Confirm", device_id,
-                                          newName, dialogContext, (e, r) {
+                                          newName, dialogContext, ([e = ""]) {
                                         setDialogState(() {
                                           error = e;
-                                          rename = r;
+                                          rename = true;
+                                          acted = e.isEmpty;
                                         });
                                       }),
                                       deviceAction("Cancel", device_id,
@@ -296,9 +300,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget contactAction(
-      String action, String username, BuildContext dialogContext) {
+      String action, String username, BuildContext dialogContext, Function callback) {
     return TextButton.icon(
       onPressed: () async {
+        callback();
         await post(Uri.parse(baseUrl + "/modify-contact/"), body: {
           "user_id": user_id.toString(),
           "username": username,
@@ -368,37 +373,50 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     showDialog(
                         context: context,
                         builder: (dialogContext) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            title: Text(
-                              status[0].toUpperCase() +
-                                  status.substring(1) +
-                                  ((status == "approved")
-                                      ? " contact"
-                                      : " request"),
-                              style: TextStyle(fontFamily: primaryFont),
+                          bool acted = false;
+
+                          return StatefulBuilder(
+                            builder: (stateContext, setDialogState) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              title: Text(
+                                status[0].toUpperCase() +
+                                    status.substring(1) +
+                                    ((status == "approved")
+                                        ? " contact"
+                                        : " request"),
+                                style: TextStyle(fontFamily: primaryFont),
+                              ),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Text(
+                                        "Username: ${username}\nEmail: ${email}",
+                                        style: TextStyle(fontFamily: primaryFont)),
+                                  ),
+                                  (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
+                                ],
+                              ),
+                              actions: (acted) ? [] : (status == "incoming")
+                                  ? [
+                                      contactAction(
+                                          "Accept", username, dialogContext, () => setDialogState(() {acted = true;})),
+                                      contactAction(
+                                          "Decline", username, dialogContext, () => setDialogState(() {acted = true;}))
+                                    ]
+                                  : (status == "outgoing")
+                                      ? [
+                                          contactAction(
+                                              "Withdraw", username, dialogContext, () => setDialogState(() {acted = true;}))
+                                        ]
+                                      : [
+                                          contactAction(
+                                              "Delete", username, dialogContext, () => setDialogState(() {acted = true;}))
+                                        ],
+                              actionsAlignment: MainAxisAlignment.center,
                             ),
-                            content: Text(
-                                "Username: ${username}\nEmail: ${email}",
-                                style: TextStyle(fontFamily: primaryFont)),
-                            actions: (status == "incoming")
-                                ? [
-                                    contactAction(
-                                        "Accept", username, dialogContext),
-                                    contactAction(
-                                        "Decline", username, dialogContext)
-                                  ]
-                                : (status == "outgoing")
-                                    ? [
-                                        contactAction(
-                                            "Withdraw", username, dialogContext)
-                                      ]
-                                    : [
-                                        contactAction(
-                                            "Delete", username, dialogContext)
-                                      ],
-                            actionsAlignment: MainAxisAlignment.center,
                           );
                         }).then((value) async {
                       if (contactChange) await getContacts();
@@ -466,6 +484,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     builder: (dialogContext) {
                       String user = "";
                       String error = "";
+
+                      bool sendingContact = false;
+
                       return StatefulBuilder(
                           builder: (stateContext, setDialogState) =>
                               AlertDialog(
@@ -476,23 +497,33 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   "New contact",
                                   style: TextStyle(fontFamily: primaryFont),
                                 ),
-                                content: TextFormField(
-                                  decoration: InputDecoration(
-                                      labelText: "User",
-                                      hintText: "Username/Email",
-                                      border: OutlineInputBorder(),
-                                      errorText:
-                                          error.isNotEmpty ? error : null,
-                                      errorStyle:
-                                          TextStyle(fontFamily: primaryFont)),
-                                  style: TextStyle(fontFamily: primaryFont),
-                                  onChanged: (value) {
-                                    setDialogState(() {
-                                      user = value;
-                                    });
-                                  },
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: TextFormField(
+                                        decoration: InputDecoration(
+                                            labelText: "User",
+                                            hintText: "Username/Email",
+                                            border: OutlineInputBorder(),
+                                            errorText:
+                                                error.isNotEmpty ? error : null,
+                                            errorStyle:
+                                                TextStyle(fontFamily: primaryFont)),
+                                        style: TextStyle(fontFamily: primaryFont),
+                                        onChanged: (value) {
+                                          setDialogState(() {
+                                            user = value;
+                                            error = "";
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    (sendingContact) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
+                                  ],
                                 ),
-                                actions: [
+                                actions: (sendingContact) ? [] : [
                                   TextButton.icon(
                                     onPressed: () async {
                                       if (user.isEmpty) {
@@ -502,6 +533,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         });
                                         return;
                                       }
+
+                                      setDialogState(() {sendingContact = true;});
+
                                       var response = await post(
                                           Uri.parse(baseUrl + "/add-contact/"),
                                           body: {
@@ -510,6 +544,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                           });
 
                                       var info = jsonDecode(response.body);
+
+                                      setDialogState(() {sendingContact = false;});
+
                                       if (response.statusCode == 400) {
                                         setDialogState(() {
                                           error = info["error"];
@@ -595,9 +632,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget documentAction(
-      String action, int document_id, BuildContext dialogContext) {
+      String action, int document_id, BuildContext dialogContext, Function callback) {
     return TextButton.icon(
       onPressed: () async {
+        callback();
         if (action == "Close") {
           await post(Uri.parse(baseUrl + "/open-document/"),
               body: {"document_id": document_id.toString()});
@@ -662,62 +700,72 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     showDialog(
                         context: context,
                         builder: (dialogContext) {
-                          return AlertDialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            title: Text(
-                              "Shared ${status == 'incoming' ? 'by' : 'to'} ${name}",
-                              style: TextStyle(fontFamily: primaryFont),
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: documents
-                                  .map((file) => Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            file["name"],
-                                            style: TextStyle(
-                                                fontFamily: primaryFont),
-                                          ),
-                                          IconButton(
-                                            onPressed: () async {
-                                              var bytes =
-                                                  base64Decode(file["bytes"]);
-                                              String? path = await FilePicker
-                                                  .platform
-                                                  .saveFile(
-                                                      dialogTitle: "Save File",
-                                                      fileName: file["name"],
-                                                      bytes: bytes,
-                                                      lockParentWindow: true);
+                          bool acted = false;
 
-                                              if (path != null) {
-                                                XFile f = XFile.fromData(bytes);
-                                                f.saveTo(path);
-                                              }
-                                            },
-                                            icon: Icon(Icons.download),
-                                            splashRadius: 20,
-                                          )
-                                        ],
-                                      ))
-                                  .toList(),
+                          return StatefulBuilder(
+                            builder: (stateContext, setDialogState) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              title: Text(
+                                "Shared ${status == 'incoming' ? 'by' : 'to'} ${name}",
+                                style: TextStyle(fontFamily: primaryFont),
+                              ),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: documents
+                                        .map((file) => Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  file["name"],
+                                                  style: TextStyle(
+                                                      fontFamily: primaryFont),
+                                                ),
+                                                IconButton(
+                                                  onPressed: () async {
+                                                    var bytes =
+                                                        base64Decode(file["bytes"]);
+                                                    String? path = await FilePicker
+                                                        .platform
+                                                        .saveFile(
+                                                            dialogTitle: "Save File",
+                                                            fileName: file["name"],
+                                                            bytes: bytes,
+                                                            lockParentWindow: true);
+                                                              
+                                                    if (path != null) {
+                                                      XFile f = XFile.fromData(bytes);
+                                                      f.saveTo(path);
+                                                    }
+                                                  },
+                                                  icon: Icon(Icons.download),
+                                                  splashRadius: 20,
+                                                )
+                                              ],
+                                            ))
+                                        .toList()
+                                  ),
+                                  (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
+                                ],
+                              ),
+                              actions: (acted) ? [] : (status == "incoming")
+                                  ? [
+                                      documentAction(
+                                          "Close", document_id, dialogContext, () => setDialogState(() {acted = true;})),
+                                      documentAction(
+                                          "Delete", document_id, dialogContext, () => setDialogState(() {acted = true;}))
+                                    ]
+                                  : [
+                                      documentAction(
+                                          "Withdraw", document_id, dialogContext, () => setDialogState(() {acted = true;}))
+                                    ],
+                              actionsAlignment: MainAxisAlignment.center,
                             ),
-                            actions: (status == "incoming")
-                                ? [
-                                    documentAction(
-                                        "Close", document_id, dialogContext),
-                                    documentAction(
-                                        "Delete", document_id, dialogContext)
-                                  ]
-                                : [
-                                    documentAction(
-                                        "Withdraw", document_id, dialogContext)
-                                  ],
-                            actionsAlignment: MainAxisAlignment.center,
                           );
                         }).then((value) async {
                       if (documentChange)
@@ -762,7 +810,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget documentsPage() {
-    if (documents == null)
+    if (documents == null || (documents!.isEmpty && gettingDocuments))
       return Center(
           child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100));
     return (documents!.isEmpty)
@@ -1187,9 +1235,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                       fontFamily: primaryFont),
                                                 ),
                                                 IconButton(
-                                                  onPressed: () =>
-                                                      setDialogState(() =>
-                                                          files.remove(file)),
+                                                  onPressed: (sendingFile) ? () {} : () {setDialogState(() => files.remove(file));},
                                                   icon: Icon(Icons.close),
                                                   splashRadius: 20,
                                                 )
@@ -1212,7 +1258,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 (sendingFile) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
                               ],
                             ),
-                            actions: [
+                            actions: (sendingFile) ? [] : [
                               TextButton.icon(
                                 onPressed: () async {
                                   bool flag = false;
@@ -1277,12 +1323,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   var response = await Response.fromStream(
                                       await request.send());
 
+                                  setDialogState(() {sendingFile = false;});
+
                                   if (response.statusCode != 200) {
                                     setDialogState(() {
                                       textError = "";
                                       fileError =
                                           jsonDecode(response.body)["error"];
-                                      sendingFile = false;
                                     });
                                   } else {
                                     Navigator.of(dialogContext).pop();
