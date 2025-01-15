@@ -1,6 +1,4 @@
-import "dart:io";
-
-import "package:device_info_plus/device_info_plus.dart";
+import "package:file_share/services/device_info.dart";
 import "package:flutter/material.dart";
 import "package:file_share/services/secure_storage.dart";
 import "package:http/http.dart";
@@ -23,10 +21,10 @@ class _OtpPageState extends State<OtpPage> {
   String? errorText;
   String? primaryFont = GoogleFonts.redHatDisplay().fontFamily;
 
-  String baseUrl = "http://127.0.0.1:8000/file_share";
+  String baseUrl = "https://file-share-weld.vercel.app/file_share";
 
   void checkCode() async {
-    List<String> deviceInfo = await getDeviceInfo();
+    List<String> deviceInfo = await DeviceInfo.getDeviceInfo();
     var response = await post(Uri.parse(baseUrl + "/check-code/"),
         body: {"user_id": user_id.toString(), "code": code, "device_id": deviceInfo[0], "device_name": deviceInfo[1], "platform": deviceInfo[2]});
 
@@ -66,16 +64,6 @@ class _OtpPageState extends State<OtpPage> {
       await SecureStorage.delete();
       Navigator.pushNamedAndRemoveUntil(context, "/", (route) => route == "/");
     }
-  }
-
-  Future<List<String>> getDeviceInfo() async {
-    List<String> data = [];
-    var deviceInfo = DeviceInfoPlugin();
-    if (Platform.isWindows) {
-      var info = await deviceInfo.windowsInfo;
-      data = [info.deviceId, info.computerName, "windows"];
-    }
-    return data;
   }
 
   @override

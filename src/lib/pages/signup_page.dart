@@ -21,12 +21,12 @@ class _SignupState extends State<Signup> {
   String? primaryFont = GoogleFonts.redHatDisplay().fontFamily;
 
 
-  String baseUrl = "http://127.0.0.1:8000/file_share";
+  String baseUrl = "https://file-share-weld.vercel.app/file_share";
 
   bool validateInputs() {
     setState(() {
       errors = [
-        RegExp(r"(?=.*[^a-z0-9.\-_])|^.{0,5}$").hasMatch(username),
+        RegExp(r"(?=.*[^a-z0-9.\-_])|^.{0,5}$|^.{10,}$").hasMatch(username),
         !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(email),
         !RegExp(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}").hasMatch(password)
       ];

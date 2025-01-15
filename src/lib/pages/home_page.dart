@@ -2,7 +2,7 @@ import "dart:convert";
 import "dart:io";
 import "dart:math";
 import "package:archive/archive_io.dart";
-import "package:device_info_plus/device_info_plus.dart";
+import "package:file_share/services/device_info.dart";
 import "package:file_share/services/secure_storage.dart";
 import "package:file_share/widgets/logout_button.dart";
 import "package:flutter/material.dart";
@@ -41,7 +41,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   String? primaryFont = GoogleFonts.redHatDisplay().fontFamily;
   late TabController controller;
 
-  String baseUrl = "http://127.0.0.1:8000/file_share";
+  String baseUrl = "https://file-share-weld.vercel.app/file_share";
 
   Future<void> getDevices() async {
     setState(() {
@@ -974,11 +974,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   Future<void> loadUserId() async {
     if (await checkLogin()) {
-      getDeviceInfo();
+      DeviceInfo.getDeviceInfo();
       String? num = await SecureStorage.read("user_id");
       setState(() {
         user_id = int.parse(num!);
         login = true;
+        deviceInfo = DeviceInfo.data;
       });
       getDevices();
       getContacts();
@@ -987,35 +988,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       await SecureStorage.delete();
       Navigator.pushNamedAndRemoveUntil(context, "/", (route) => route == "/");
     }
-  }
-
-  Future<List<String>> getDeviceInfo() async {
-    List<String> data = [];
-    var dInfo = DeviceInfoPlugin();
-    if (Platform.isWindows) {
-      var info = await dInfo.windowsInfo;
-      data = [info.deviceId, info.computerName, "windows"];
-    }
-    else if (Platform.isIOS) {
-      var info = await dInfo.iosInfo;
-      data = [info.identifierForVendor!, info.name, "ios"];
-    }
-    else if (Platform.isAndroid) {
-      var info = await dInfo.androidInfo;
-      data = [info.id, info.product, "android"];
-    }
-    else if (Platform.isMacOS) {
-      var info = await dInfo.macOsInfo;
-      data = [info.systemGUID!, info.computerName, "macos"];
-    }
-    else {
-      var info = await dInfo.linuxInfo;
-      data = [info.machineId!, info.prettyName, "linux"];
-    }
-    setState(() {
-      deviceInfo = data;
-    });
-    return data;
   }
 
   @override
