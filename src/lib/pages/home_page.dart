@@ -153,52 +153,54 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 (!rename) ? "Device" : "New Device",
                                 style: TextStyle(fontFamily: primaryFont),
                               ),
-                              content: (!rename)
-                                  ? Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: Text("Name: ${name}\nPlatform: ${platform}",
-                                            style: TextStyle(fontFamily: primaryFont)),
-                                      ),
-                                      (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
-                                    ],
-                                  )
-                                  : Column(
+                              content: SingleChildScrollView(
+                                child: (!rename)
+                                    ? Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Padding(
                                           padding: const EdgeInsets.all(10.0),
-                                          child: Text("Old Name: ${name}",
-                                              style: TextStyle(
-                                                  fontFamily: primaryFont)),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(10.0),
-                                          child: TextFormField(
-                                            decoration: InputDecoration(
-                                              labelText: "New Name",
-                                              hintText: "New Name",
-                                              errorText: (error.isEmpty)
-                                                  ? null
-                                                  : error,
-                                              errorStyle: TextStyle(
-                                                  fontFamily: primaryFont),
-                                              border: OutlineInputBorder(),
-                                            ),
-                                            style: TextStyle(
-                                                fontFamily: primaryFont),
-                                            onChanged: (value) {
-                                              setDialogState(() {
-                                                newName = value;
-                                              });
-                                            },
-                                          ),
+                                          child: Text("Name: ${name}\nPlatform: ${platform}",
+                                              style: TextStyle(fontFamily: primaryFont)),
                                         ),
                                         (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
                                       ],
-                                    ),
+                                    )
+                                    : Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: Text("Old Name: ${name}",
+                                                style: TextStyle(
+                                                    fontFamily: primaryFont)),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: TextFormField(
+                                              decoration: InputDecoration(
+                                                labelText: "New Name",
+                                                hintText: "New Name",
+                                                errorText: (error.isEmpty)
+                                                    ? null
+                                                    : error,
+                                                errorStyle: TextStyle(
+                                                    fontFamily: primaryFont),
+                                                border: OutlineInputBorder(),
+                                              ),
+                                              style: TextStyle(
+                                                  fontFamily: primaryFont),
+                                              onChanged: (value) {
+                                                setDialogState(() {
+                                                  newName = value;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
+                                        ],
+                                      ),
+                              ),
                               actions: (acted) ? [] : (!rename)
                                   ? (identifier != deviceInfo[0])
                                       ? [
@@ -424,17 +426,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         : " request"),
                                 style: TextStyle(fontFamily: primaryFont),
                               ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Text(
-                                        "Username: ${username}\nEmail: ${email}",
-                                        style: TextStyle(fontFamily: primaryFont)),
-                                  ),
-                                  (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
-                                ],
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Text(
+                                          "Username: ${username}\nEmail: ${email}",
+                                          style: TextStyle(fontFamily: primaryFont)),
+                                    ),
+                                    (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
+                                  ],
+                                ),
                               ),
                               actions: (acted) ? [] : (status == "incoming")
                                   ? [
@@ -556,31 +560,33 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   "New contact",
                                   style: TextStyle(fontFamily: primaryFont),
                                 ),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: TextFormField(
-                                        decoration: InputDecoration(
-                                            labelText: "User",
-                                            hintText: "Username/Email",
-                                            border: OutlineInputBorder(),
-                                            errorText:
-                                                error.isNotEmpty ? error : null,
-                                            errorStyle:
-                                                TextStyle(fontFamily: primaryFont)),
-                                        style: TextStyle(fontFamily: primaryFont),
-                                        onChanged: (value) {
-                                          setDialogState(() {
-                                            user = value;
-                                            error = "";
-                                          });
-                                        },
+                                content: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: TextFormField(
+                                          decoration: InputDecoration(
+                                              labelText: "User",
+                                              hintText: "Username/Email",
+                                              border: OutlineInputBorder(),
+                                              errorText:
+                                                  error.isNotEmpty ? error : null,
+                                              errorStyle:
+                                                  TextStyle(fontFamily: primaryFont)),
+                                          style: TextStyle(fontFamily: primaryFont),
+                                          onChanged: (value) {
+                                            setDialogState(() {
+                                              user = value;
+                                              error = "";
+                                            });
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                    (sendingContact) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
-                                  ],
+                                      (sendingContact) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
+                                    ],
+                                  ),
                                 ),
                                 actions: (sendingContact) ? [] : [
                                   TextButton.icon(
@@ -763,6 +769,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         context: context,
                         builder: (dialogContext) {
                           bool acted = false;
+                          String downloaded = "";
 
                           return StatefulBuilder(
                             builder: (stateContext, setDialogState) => AlertDialog(
@@ -772,78 +779,80 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 "Shared ${status == 'incoming' ? 'by' : 'to'} ${name}",
                                 style: TextStyle(fontFamily: primaryFont),
                               ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
-                                        child: Text(
-                                            "Username: ${name}\n\nTime: ${DateTime.parse(time).toLocal()}",
-                                            style: TextStyle(fontFamily: primaryFont)),
-                                      ),
-                                      Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: documents
-                                            .map((file) => Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      file["name"],
-                                                      style: TextStyle(
-                                                          fontFamily: primaryFont),
-                                                    ),
-                                                    IconButton(
-                                                      onPressed: () async {
-                                                        String name = file["name"];
-                                      
-                                                        var bytes =
-                                                            base64Decode(file["bytes"]);
-                                      
-                                                        if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
-                                                          await Gal.putImageBytes(bytes);
-                                                          return;
-                                                        }
-                                      
-                                                        String? path = await FilePicker
-                                                            .platform
-                                                            .saveFile(
-                                                                dialogTitle: "Save File",
-                                                                fileName: name,
-                                                                bytes: bytes,
-                                                                lockParentWindow: true);
-                                                                  
-                                                        if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
-                                                          XFile f = XFile.fromData(bytes);
-                                                          f.saveTo(path);
-                                                        }
-                                                      },
-                                                      icon: Icon(Icons.download),
-                                                      splashRadius: 20,
-                                                    )
-                                                  ],
-                                                ))
-                                            .toList()
-                                      ),
-                                    ],
-                                  ),
-                                  (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
-                                ],
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
+                                      child: Text(
+                                          "Username: ${name}\n\nTime: ${DateTime.parse(time).toLocal()}",
+                                          style: TextStyle(fontFamily: primaryFont)),
+                                    ),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: documents
+                                          .map((file) => Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    file["name"],
+                                                    style: TextStyle(
+                                                        fontFamily: primaryFont),
+                                                  ),
+                                                  IconButton(
+                                                    onPressed: () async {
+                                                      String name = file["name"];
+                                    
+                                                      var bytes =
+                                                          base64Decode(file["bytes"]);
+                                    
+                                                      if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
+                                                        await Gal.putImageBytes(bytes);
+                                                        setDialogState(() {downloaded = name;});
+                                                        return;
+                                                      }
+                                    
+                                                      String? path = await FilePicker
+                                                          .platform
+                                                          .saveFile(
+                                                              dialogTitle: "Save File",
+                                                              fileName: name,
+                                                              bytes: bytes,
+                                                              lockParentWindow: true);
+                                                                
+                                                      if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
+                                                        XFile f = XFile.fromData(bytes);
+                                                        f.saveTo(path);
+                                                      }
+
+                                                      if (path != null) setDialogState(() {downloaded = name;});
+                                                    },
+                                                    icon: Icon(Icons.download),
+                                                    splashRadius: 20,
+                                                  )
+                                                ],
+                                              ))
+                                          .toList()
+                                    ),
+                                    (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
+
+                                    (downloaded.isNotEmpty) ? Padding(padding: EdgeInsets.all(10), child: Text(downloaded + " was downloaded successfully", style: TextStyle(fontFamily: primaryFont),),) : Container()
+                                  ],
+                                ),
                               ),
                               actions: (acted) ? [] : (status == "incoming")
                                   ? [
                                       documentAction(
-                                          "Close", document_id, dialogContext, () => setDialogState(() {acted = true;})),
+                                          "Close", document_id, dialogContext, () => setDialogState(() {acted = true; downloaded = "";})),
                                       documentAction(
-                                          "Delete", document_id, dialogContext, () => setDialogState(() {acted = true;}))
+                                          "Delete", document_id, dialogContext, () => setDialogState(() {acted = true; downloaded = "";}))
                                     ]
                                   : [
                                       documentAction(
-                                          "Withdraw", document_id, dialogContext, () => setDialogState(() {acted = true;}))
+                                          "Withdraw", document_id, dialogContext, () => setDialogState(() {acted = true; downloaded = "";}))
                                     ],
                               actionsAlignment: MainAxisAlignment.center,
                             ),
@@ -868,7 +877,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             fontFamily: primaryFont,
                           ),
                         ),
-                        Text("${documents.length} documents",
+                        Text("${documents.length} document${(documents.length > 1) ? 's' : ''}",
                             style: TextStyle(
                                 color: Colors.black, fontFamily: primaryFont)),
                       ],
@@ -883,7 +892,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             fontFamily: primaryFont,
                           ),
                         ),
-                        Text("${documents.length} documents",
+                        Text("${documents.length} document${(documents.length > 1) ? 's' : ''}",
                             style: TextStyle(
                                 color: Colors.black, fontFamily: primaryFont)),
                       ],
@@ -1124,216 +1133,218 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                               "Send file",
                               style: TextStyle(fontFamily: primaryFont),
                             ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      recipientButton("Device", device, () {
-                                        setDialogState(() {
-                                          device = !device;
-                                          generate = true;
-                                          textError = "";
-                                          fileError = "";
-                                        });
-                                      }),
-                                      recipientButton("User", !device, () {
-                                        setDialogState(() {
-                                          device = !device;
-                                          generate = true;
-                                          textError = "";
-                                          fileError = "";
-                                        });
-                                      }),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Column(
-                                    children: [
-                                      TextFormField(
-                                        controller: controller,
-                                        decoration: InputDecoration(
-                                          labelText: "Recipient",
-                                          hintText: "Recipient",
-                                          errorText: (textError.isEmpty)
-                                              ? null
-                                              : textError,
-                                          errorStyle: TextStyle(
-                                              fontFamily: primaryFont),
-                                          border: OutlineInputBorder(),
-                                        ),
-                                        style:
-                                            TextStyle(fontFamily: primaryFont),
-                                        onChanged: (value) {
+                            content: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        recipientButton("Device", device, () {
                                           setDialogState(() {
+                                            device = !device;
+                                            generate = true;
                                             textError = "";
                                             fileError = "";
-                                            recipientName = value;
                                           });
-                                        },
-                                      ),
-                                      (recipientName.isNotEmpty)
-                                          ? generateAutocomplete(
-                                              generate,
-                                              recipientName,
-                                              device,
-                                              (text) => setDialogState(() {
-                                                    controller.text = text;
-                                                    generate = false;
-                                                    recipientName = text;
-                                                  }))
-                                          : Container(),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: TextButton(
-                                    onPressed: () async {
-                                      setDialogState(() {
-                                        fileError = "";
-                                      });
-
-                                      FilePickerResult? result =
-                                          await FilePicker.platform.pickFiles(
-                                              withData: true,
-                                              allowMultiple: true,
-                                              lockParentWindow: true);
-
-                                      if (result != null) {
-                                        for (var f in result.files) {
-                                          if (files.length < 5) {
-                                            files[f.name] = f.bytes;
-                                          } else {
-                                            setDialogState(() {
-                                              fileError =
-                                                  "You can send a maximum of 5 documents at a time";
-                                            });
-                                            break;
-                                          }
-                                        }
-                                        setDialogState(() {
-                                          files = files;
-                                        });
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: Text(
-                                        "Pick a file",
-                                        style:
-                                            TextStyle(fontFamily: primaryFont),
-                                      ),
+                                        }),
+                                        recipientButton("User", !device, () {
+                                          setDialogState(() {
+                                            device = !device;
+                                            generate = true;
+                                            textError = "";
+                                            fileError = "";
+                                          });
+                                        }),
+                                      ],
                                     ),
-                                    style: ButtonStyle(
-                                        shape: WidgetStatePropertyAll(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10))),
-                                        backgroundColor:
-                                            WidgetStatePropertyAll(Colors.blue),
-                                        foregroundColor: WidgetStatePropertyAll(
-                                            Colors.white)),
                                   ),
-                                ),
-                                (Platform.isAndroid || Platform.isIOS)
-                                    ? Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: TextButton(
-                                          onPressed: () async {
-                                            setDialogState(() {
-                                              fileError = "";
-                                            });
-
-                                            ImagePicker picker = ImagePicker();
-                                            List<XFile> media =
-                                                await picker.pickMultiImage();
-
-                                            if (media.isNotEmpty) {
-                                              for (var f in media) {
-                                                if (files.length < 5) {
-                                                  files[f.name] =
-                                                      await f.readAsBytes();
-                                                } else {
-                                                  setDialogState(() {
-                                                    fileError =
-                                                        "You can send a maximum of 5 documents at a time";
-                                                  });
-                                                  break;
-                                                }
-                                              }
-                                              setDialogState(() {
-                                                files = files;
-                                              });
-                                            }
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(10.0),
-                                            child: Text(
-                                              "Pick an image",
-                                              style: TextStyle(
-                                                  fontFamily: primaryFont),
-                                            ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Column(
+                                      children: [
+                                        TextFormField(
+                                          controller: controller,
+                                          decoration: InputDecoration(
+                                            labelText: "Recipient",
+                                            hintText: "Recipient",
+                                            errorText: (textError.isEmpty)
+                                                ? null
+                                                : textError,
+                                            errorStyle: TextStyle(
+                                                fontFamily: primaryFont),
+                                            border: OutlineInputBorder(),
                                           ),
-                                          style: ButtonStyle(
-                                              shape: WidgetStatePropertyAll(
-                                                  RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10))),
-                                              backgroundColor:
-                                                  WidgetStatePropertyAll(
-                                                      Colors.blue),
-                                              foregroundColor:
-                                                  WidgetStatePropertyAll(
-                                                      Colors.white)),
+                                          style:
+                                              TextStyle(fontFamily: primaryFont),
+                                          onChanged: (value) {
+                                            setDialogState(() {
+                                              textError = "";
+                                              fileError = "";
+                                              recipientName = value;
+                                            });
+                                          },
                                         ),
-                                      )
-                                    : Container(),
-                                Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: files.keys
-                                        .map((file) => Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  file,
-                                                  style: TextStyle(
-                                                      fontFamily: primaryFont),
-                                                ),
-                                                IconButton(
-                                                  onPressed: (sendingFile) ? () {} : () {setDialogState(() => files.remove(file));},
-                                                  icon: Icon(Icons.close),
-                                                  splashRadius: 20,
-                                                )
-                                              ],
-                                            ))
-                                        .toList(),
+                                        (recipientName.isNotEmpty)
+                                            ? generateAutocomplete(
+                                                generate,
+                                                recipientName,
+                                                device,
+                                                (text) => setDialogState(() {
+                                                      controller.text = text;
+                                                      generate = false;
+                                                      recipientName = text;
+                                                    }))
+                                            : Container(),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                (fileError.isNotEmpty)
-                                    ? Padding(
-                                        padding: EdgeInsets.all(10),
+                                  Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: TextButton(
+                                      onPressed: () async {
+                                        setDialogState(() {
+                                          fileError = "";
+                                        });
+                              
+                                        FilePickerResult? result =
+                                            await FilePicker.platform.pickFiles(
+                                                withData: true,
+                                                allowMultiple: true,
+                                                lockParentWindow: true);
+                              
+                                        if (result != null) {
+                                          for (var f in result.files) {
+                                            if (files.length < 5) {
+                                              files[f.name] = f.bytes;
+                                            } else {
+                                              setDialogState(() {
+                                                fileError =
+                                                    "You can send a maximum of 5 documents at a time";
+                                              });
+                                              break;
+                                            }
+                                          }
+                                          setDialogState(() {
+                                            files = files;
+                                          });
+                                        }
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
                                         child: Text(
-                                          fileError,
-                                          style: TextStyle(
-                                              fontFamily: primaryFont,
-                                              color: Colors.red),
+                                          "Pick a file",
+                                          style:
+                                              TextStyle(fontFamily: primaryFont),
                                         ),
-                                      )
-                                    : Container(),
-                                (sendingFile) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
-                              ],
+                                      ),
+                                      style: ButtonStyle(
+                                          shape: WidgetStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10))),
+                                          backgroundColor:
+                                              WidgetStatePropertyAll(Colors.blue),
+                                          foregroundColor: WidgetStatePropertyAll(
+                                              Colors.white)),
+                                    ),
+                                  ),
+                                  (Platform.isAndroid || Platform.isIOS)
+                                      ? Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: TextButton(
+                                            onPressed: () async {
+                                              setDialogState(() {
+                                                fileError = "";
+                                              });
+                              
+                                              ImagePicker picker = ImagePicker();
+                                              List<XFile> media =
+                                                  await picker.pickMultiImage();
+                              
+                                              if (media.isNotEmpty) {
+                                                for (var f in media) {
+                                                  if (files.length < 5) {
+                                                    files[f.name] =
+                                                        await f.readAsBytes();
+                                                  } else {
+                                                    setDialogState(() {
+                                                      fileError =
+                                                          "You can send a maximum of 5 documents at a time";
+                                                    });
+                                                    break;
+                                                  }
+                                                }
+                                                setDialogState(() {
+                                                  files = files;
+                                                });
+                                              }
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10.0),
+                                              child: Text(
+                                                "Pick an image",
+                                                style: TextStyle(
+                                                    fontFamily: primaryFont),
+                                              ),
+                                            ),
+                                            style: ButtonStyle(
+                                                shape: WidgetStatePropertyAll(
+                                                    RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                10))),
+                                                backgroundColor:
+                                                    WidgetStatePropertyAll(
+                                                        Colors.blue),
+                                                foregroundColor:
+                                                    WidgetStatePropertyAll(
+                                                        Colors.white)),
+                                          ),
+                                        )
+                                      : Container(),
+                                  Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: files.keys
+                                          .map((file) => Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    file,
+                                                    style: TextStyle(
+                                                        fontFamily: primaryFont),
+                                                  ),
+                                                  IconButton(
+                                                    onPressed: (sendingFile) ? () {} : () {setDialogState(() => files.remove(file));},
+                                                    icon: Icon(Icons.close),
+                                                    splashRadius: 20,
+                                                  )
+                                                ],
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                                  (fileError.isNotEmpty)
+                                      ? Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text(
+                                            fileError,
+                                            style: TextStyle(
+                                                fontFamily: primaryFont,
+                                                color: Colors.red),
+                                          ),
+                                        )
+                                      : Container(),
+                                  (sendingFile) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
+                                ],
+                              ),
                             ),
                             actions: (sendingFile) ? [] : [
                               TextButton.icon(
