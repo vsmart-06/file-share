@@ -311,7 +311,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         child: Container(
-          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - kToolbarHeight - kBottomNavigationBarHeight),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.start,
@@ -530,7 +530,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         child: Container(
-          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - kToolbarHeight - kBottomNavigationBarHeight),
           child: Column(
             children: [
               (contacts!.isEmpty)
@@ -931,7 +931,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         child: Container(
-          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - kToolbarHeight - kBottomNavigationBarHeight),
           child: (documents!.isEmpty)
               ? Column(
                 children: [
