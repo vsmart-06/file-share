@@ -35,7 +35,7 @@ SECRET_KEY = 'django-insecure-4rdcpf!q=q76&ekx7q$fql2-c!0n(i&j*cm8vvo%yhjm#tqjkc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["file-share-weld.vercel.app"]
 
 
 # Application definition
