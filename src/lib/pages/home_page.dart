@@ -36,7 +36,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   bool deviceChange = false;
   bool contactChange = false;
   bool documentChange = false;
-  bool documentSent = false;
 
   String? primaryFont = GoogleFonts.redHatDisplay().fontFamily;
   late TabController controller;
@@ -252,8 +251,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Row(
+                    child: (MediaQuery.of(context).orientation == Orientation.landscape) ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: primaryFont,
+                          ),
+                        ),
+                        Text(
+                          "Platform: ${platform}",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: primaryFont,
+                          ),
+                        ),
+                      ],
+                    ) : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           name,
@@ -443,8 +461,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Row(
+                    child: (MediaQuery.of(context).orientation == Orientation.landscape) ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "Username: ${username}",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: primaryFont,
+                          ),
+                        ),
+                        Text(
+                          "Email: ${email}",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontFamily: primaryFont,
+                          ),
+                        ),
+                      ],
+                    ) : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "Username: ${username}",
@@ -498,6 +535,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             padding: const EdgeInsets.all(10.0),
             child: TextButton(
               onPressed: () {
+                setState(() {
+                  contactChange = false;
+                });
                 showDialog(
                     context: context,
                     builder: (dialogContext) {
@@ -573,6 +613,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         return;
                                       }
                                       Navigator.of(dialogContext).pop();
+                                      setState(() {
+                                        contactChange = true;
+                                      });
                                     },
                                     label: Padding(
                                       padding: const EdgeInsets.all(10.0),
@@ -596,7 +639,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   ),
                                 ],
                               ));
-                    }).then((value) async => await getContacts());
+                    }).then((value) async {if (contactChange) await getContacts();});
               },
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
@@ -734,48 +777,59 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 children: [
                                   Column(
                                     mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: documents
-                                        .map((file) => Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(
-                                                  file["name"],
-                                                  style: TextStyle(
-                                                      fontFamily: primaryFont),
-                                                ),
-                                                IconButton(
-                                                  onPressed: () async {
-                                                    String name = file["name"];
-
-                                                    var bytes =
-                                                        base64Decode(file["bytes"]);
-
-                                                    if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
-                                                      await Gal.putImageBytes(bytes);
-                                                      return;
-                                                    }
-
-                                                    String? path = await FilePicker
-                                                        .platform
-                                                        .saveFile(
-                                                            dialogTitle: "Save File",
-                                                            fileName: name,
-                                                            bytes: bytes,
-                                                            lockParentWindow: true);
-                                                              
-                                                    if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
-                                                      XFile f = XFile.fromData(bytes);
-                                                      f.saveTo(path);
-                                                    }
-                                                  },
-                                                  icon: Icon(Icons.download),
-                                                  splashRadius: 20,
-                                                )
-                                              ],
-                                            ))
-                                        .toList()
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 15),
+                                        child: Text(
+                                            "Username: ${name}\n\nTime: ${DateTime.parse(time).toLocal()}",
+                                            style: TextStyle(fontFamily: primaryFont)),
+                                      ),
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: documents
+                                            .map((file) => Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      file["name"],
+                                                      style: TextStyle(
+                                                          fontFamily: primaryFont),
+                                                    ),
+                                                    IconButton(
+                                                      onPressed: () async {
+                                                        String name = file["name"];
+                                      
+                                                        var bytes =
+                                                            base64Decode(file["bytes"]);
+                                      
+                                                        if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
+                                                          await Gal.putImageBytes(bytes);
+                                                          return;
+                                                        }
+                                      
+                                                        String? path = await FilePicker
+                                                            .platform
+                                                            .saveFile(
+                                                                dialogTitle: "Save File",
+                                                                fileName: name,
+                                                                bytes: bytes,
+                                                                lockParentWindow: true);
+                                                                  
+                                                        if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
+                                                          XFile f = XFile.fromData(bytes);
+                                                          f.saveTo(path);
+                                                        }
+                                                      },
+                                                      icon: Icon(Icons.download),
+                                                      splashRadius: 20,
+                                                    )
+                                                  ],
+                                                ))
+                                            .toList()
+                                      ),
+                                    ],
                                   ),
                                   (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
                                 ],
@@ -804,7 +858,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Row(
+                    child: (MediaQuery.of(context).orientation == Orientation.landscape) ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
@@ -814,8 +868,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             fontFamily: primaryFont,
                           ),
                         ),
+                        Text("${documents.length} documents",
+                            style: TextStyle(
+                                color: Colors.black, fontFamily: primaryFont)),
+                      ],
+                    ) : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                         Text(
-                          "Time: ${DateTime.parse(time).toLocal()}",
+                          "${(is_device) ? 'Device' : 'Username'}: ${name}",
                           style: TextStyle(
                             color: Colors.black,
                             fontFamily: primaryFont,
@@ -1038,7 +1100,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             setState(() {
-              documentSent = false;
+              documentChange = false;
             });
             showDialog(
                 context: context,
@@ -1349,7 +1411,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                   } else {
                                     Navigator.of(dialogContext).pop();
                                     setState(() {
-                                      documentSent = true;
+                                      documentChange = true;
                                     });
                                   }
                                 },
@@ -1376,7 +1438,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             actionsAlignment: MainAxisAlignment.center,
                           ));
                 }).then((value) async {
-              if (documentSent) await getDocuments();
+              if (documentChange) await getDocuments();
             });
           },
           child: Icon(Icons.upload)),
