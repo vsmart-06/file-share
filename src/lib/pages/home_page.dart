@@ -39,6 +39,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   String? primaryFont = GoogleFonts.redHatDisplay().fontFamily;
   late TabController controller;
+  int navigationBarIndex = 0;
 
   String baseUrl = "https://file-share-weld.vercel.app/file_share";
 
@@ -1082,7 +1083,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         title: Text("Home", style: TextStyle(fontFamily: primaryFont)),
         centerTitle: true,
         actions: [LogoutButton()],
-        bottom: TabBar(
+        bottom: (MediaQuery.of(context).orientation == Orientation.landscape) ? TabBar(
           controller: controller,
           tabs: [
             Tab(
@@ -1101,7 +1102,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               style: TextStyle(fontFamily: primaryFont),
             )),
           ],
-        ),
+        ) : null,
       ),
       body: TabBarView(
           controller: controller,
@@ -1454,6 +1455,33 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           },
           child: Icon(Icons.upload)),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: (MediaQuery.of(context).orientation == Orientation.portrait) ? 
+      BottomNavigationBar(
+        currentIndex: navigationBarIndex,
+        enableFeedback: true,
+        selectedLabelStyle: TextStyle(fontFamily: primaryFont),
+        unselectedLabelStyle: TextStyle(fontFamily: primaryFont),
+        onTap: (value) {
+          setState(() {
+            navigationBarIndex = value;
+          });
+          controller.animateTo(value);
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.devices_rounded),
+            label: "Devices"
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.contact_page_rounded),
+            label: "Contacts"
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.description_rounded),
+            label: "Documents"
+          ),
+        ]
+      ) : null
     );
   }
 }
