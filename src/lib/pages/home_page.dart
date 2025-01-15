@@ -913,11 +913,25 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       return Center(
           child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100));
     return (documents!.isEmpty)
-        ? Center(
-            child: Text(
-            "You have no documents",
-            style: TextStyle(fontFamily: primaryFont, fontSize: 25),
-          ))
+        ? SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Text(
+                      "You have no documents",
+                      style: TextStyle(fontFamily: primaryFont, fontSize: 20),
+                                  ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        )
         : SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1082,7 +1096,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       appBar: AppBar(
         title: Text("Home", style: TextStyle(fontFamily: primaryFont)),
         centerTitle: true,
-        actions: [LogoutButton()],
+        actions: [IconButton(splashRadius: 20, onPressed: () {getDevices(); getContacts(); getDocuments();}, icon: Icon(Icons.refresh)), LogoutButton()],
         bottom: (MediaQuery.of(context).orientation == Orientation.landscape) ? TabBar(
           controller: controller,
           tabs: [
@@ -1108,6 +1122,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           controller: controller,
           children: [devicesPage(), contactsPage(), documentsPage()]),
       floatingActionButton: FloatingActionButton(
+          tooltip: "Share a document",
           onPressed: () {
             setState(() {
               documentChange = false;
@@ -1119,12 +1134,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   String textError = "";
                   bool generate = true;
                   String recipientName = "";
-
+    
                   Map files = {};
                   String fileError = "";
-
+    
                   bool sendingFile = false;
-
+    
                   TextEditingController controller = TextEditingController();
                   return StatefulBuilder(
                       builder: (stateContext, setDialogState) => AlertDialog(
@@ -1352,7 +1367,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 onPressed: () async {
                                   bool flag = false;
                                   int? device_id;
-
+    
                                   if (device) {
                                     for (Map x in devices!) {
                                       if (x["name"] == recipientName) {
@@ -1370,7 +1385,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       }
                                     }
                                   }
-
+    
                                   if (!flag) {
                                     setDialogState(() {
                                       textError =
@@ -1379,7 +1394,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     });
                                     return;
                                   }
-
+    
                                   if (files.isEmpty) {
                                     setDialogState(() {
                                       textError = "";
@@ -1387,19 +1402,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     });
                                     return;
                                   }
-
+    
                                   setDialogState(() {sendingFile = true;});
-
+    
                                   Archive archive = Archive();
                                   for (String file in files.keys) {
                                     archive.addFile(ArchiveFile(file, files[file].length, files[file]));
                                   }
                                   var zipBytes = ZipEncoder().encode(archive);
-
+    
                                   var request = MultipartRequest("POST",
                                       Uri.parse(baseUrl + "/share-documents/"));
                                   request.files.add(MultipartFile.fromBytes("zipped_file", zipBytes, filename: "zipped_file.zip"));
-
+    
                                   request.fields["user_id"] =
                                       user_id.toString();
                                   request.fields["identifier"] = deviceInfo[0];
@@ -1408,12 +1423,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         device_id.toString();
                                   else
                                     request.fields["username"] = recipientName;
-
+    
                                   var response = await Response.fromStream(
                                       await request.send());
-
+    
                                   setDialogState(() {sendingFile = false;});
-
+    
                                   if (response.statusCode != 200) {
                                     setDialogState(() {
                                       textError = "";
