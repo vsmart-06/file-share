@@ -101,6 +101,7 @@ class _SignupState extends State<Signup> {
                   onChanged: (value) {
                     setState(() {
                       username = value;
+                      errors[0] = false;
                     });
                   },
                 ),
@@ -119,6 +120,7 @@ class _SignupState extends State<Signup> {
                   onChanged: (value) {
                     setState(() {
                       email = value;
+                      errors[1] = false;
                     });
                   },
                 ),
@@ -137,6 +139,7 @@ class _SignupState extends State<Signup> {
                   onChanged: (value) {
                     setState(() {
                       password = value;
+                      errors[2] = false;
                     });
                   },
                 ),

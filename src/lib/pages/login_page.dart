@@ -98,6 +98,7 @@ class _LoginState extends State<Login> {
                   onChanged: (value) {
                     setState(() {
                       username = value;
+                      errors[0] = false;
                     });
                   },
                 ),
@@ -117,6 +118,7 @@ class _LoginState extends State<Login> {
                   onChanged: (value) {
                     setState(() {
                       password = value;
+                      errors[1] = false;
                     });
                   },
                 ),
