@@ -18,7 +18,7 @@ load_dotenv()
 
 DATABASE_NAME = os.getenv("NAME")
 DATABASE_USER = os.getenv("USER")
-DATABASE_PASSWORD = os.getenv("PASSWORD")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
 DATABASE_HOST = os.getenv("HOST")
 DATABASE_PORT = os.getenv("PORT")
 
