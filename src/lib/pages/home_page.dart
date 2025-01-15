@@ -310,18 +310,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       onRefresh: () async {await getDevices(true);},
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: devices!
-              .map(
-                (e) => deviceCard(
-                    e["device_id"], e["identifier"], e["name"], e["platform"]),
-              )
-              .toList() + [(gettingDevices) ? Padding(
-                          padding: const EdgeInsets.all(30.0),
-                          child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
-                        ) : Container()],
+        child: Container(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: devices!
+                .map(
+                  (e) => deviceCard(
+                      e["device_id"], e["identifier"], e["name"], e["platform"]),
+                )
+                .toList() + [(gettingDevices) ? Padding(
+                            padding: const EdgeInsets.all(30.0),
+                            child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
+                          ) : Container()],
+          ),
         ),
       ),
     );
@@ -526,154 +529,157 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       onRefresh: () async {await getContacts(true);},
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            (contacts!.isEmpty)
-                ? Center(
-                    child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text(
-                      "You have no contacts",
-                      style: TextStyle(fontFamily: primaryFont, fontSize: 20),
+        child: Container(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          child: Column(
+            children: [
+              (contacts!.isEmpty)
+                  ? Center(
+                      child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                      child: Text(
+                        "You have no contacts",
+                        style: TextStyle(fontFamily: primaryFont, fontSize: 20),
+                      ),
+                    ))
+                  : Column(
+                      children: contacts!
+                          .map((e) =>
+                              contactCard(e["username"], e["email"], e["status"]))
+                          .toList(),
                     ),
-                  ))
-                : Column(
-                    children: contacts!
-                        .map((e) =>
-                            contactCard(e["username"], e["email"], e["status"]))
-                        .toList(),
-                  ),
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    contactChange = false;
-                  });
-                  showDialog(
-                      context: context,
-                      builder: (dialogContext) {
-                        String user = "";
-                        String error = "";
-      
-                        bool sendingContact = false;
-      
-                        return StatefulBuilder(
-                            builder: (stateContext, setDialogState) =>
-                                AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                  actionsAlignment: MainAxisAlignment.center,
-                                  title: Text(
-                                    "New contact",
-                                    style: TextStyle(fontFamily: primaryFont),
-                                  ),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(10.0),
-                                          child: TextFormField(
-                                            decoration: InputDecoration(
-                                                labelText: "User",
-                                                hintText: "Username/Email",
-                                                border: OutlineInputBorder(),
-                                                errorText:
-                                                    error.isNotEmpty ? error : null,
-                                                errorStyle:
-                                                    TextStyle(fontFamily: primaryFont)),
-                                            style: TextStyle(fontFamily: primaryFont),
-                                            onChanged: (value) {
-                                              setDialogState(() {
-                                                user = value;
-                                                error = "";
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      contactChange = false;
+                    });
+                    showDialog(
+                        context: context,
+                        builder: (dialogContext) {
+                          String user = "";
+                          String error = "";
+                
+                          bool sendingContact = false;
+                
+                          return StatefulBuilder(
+                              builder: (stateContext, setDialogState) =>
+                                  AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10)),
+                                    actionsAlignment: MainAxisAlignment.center,
+                                    title: Text(
+                                      "New contact",
+                                      style: TextStyle(fontFamily: primaryFont),
+                                    ),
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: TextFormField(
+                                              decoration: InputDecoration(
+                                                  labelText: "User",
+                                                  hintText: "Username/Email",
+                                                  border: OutlineInputBorder(),
+                                                  errorText:
+                                                      error.isNotEmpty ? error : null,
+                                                  errorStyle:
+                                                      TextStyle(fontFamily: primaryFont)),
+                                              style: TextStyle(fontFamily: primaryFont),
+                                              onChanged: (value) {
+                                                setDialogState(() {
+                                                  user = value;
+                                                  error = "";
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          (sendingContact) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
+                                        ],
+                                      ),
+                                    ),
+                                    actions: (sendingContact) ? [] : [
+                                      TextButton.icon(
+                                        onPressed: () async {
+                                          if (user.isEmpty) {
+                                            setDialogState(() {
+                                              error =
+                                                  "Username/Email cannot be empty";
+                                            });
+                                            return;
+                                          }
+                
+                                          setDialogState(() {sendingContact = true;});
+                
+                                          var response = await post(
+                                              Uri.parse(baseUrl + "/add-contact/"),
+                                              body: {
+                                                "user_id": user_id.toString(),
+                                                "second": user
                                               });
-                                            },
+                
+                                          var info = jsonDecode(response.body);
+                
+                                          setDialogState(() {sendingContact = false;});
+                
+                                          if (response.statusCode == 400) {
+                                            setDialogState(() {
+                                              error = info["error"];
+                                            });
+                                            return;
+                                          }
+                                          Navigator.of(dialogContext).pop();
+                                          setState(() {
+                                            contactChange = true;
+                                          });
+                                        },
+                                        label: Padding(
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: Text(
+                                            "Send",
+                                            style:
+                                                TextStyle(fontFamily: primaryFont),
                                           ),
                                         ),
-                                        (sendingContact) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
-                                      ],
-                                    ),
-                                  ),
-                                  actions: (sendingContact) ? [] : [
-                                    TextButton.icon(
-                                      onPressed: () async {
-                                        if (user.isEmpty) {
-                                          setDialogState(() {
-                                            error =
-                                                "Username/Email cannot be empty";
-                                          });
-                                          return;
-                                        }
-      
-                                        setDialogState(() {sendingContact = true;});
-      
-                                        var response = await post(
-                                            Uri.parse(baseUrl + "/add-contact/"),
-                                            body: {
-                                              "user_id": user_id.toString(),
-                                              "second": user
-                                            });
-      
-                                        var info = jsonDecode(response.body);
-      
-                                        setDialogState(() {sendingContact = false;});
-      
-                                        if (response.statusCode == 400) {
-                                          setDialogState(() {
-                                            error = info["error"];
-                                          });
-                                          return;
-                                        }
-                                        Navigator.of(dialogContext).pop();
-                                        setState(() {
-                                          contactChange = true;
-                                        });
-                                      },
-                                      label: Padding(
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: Text(
-                                          "Send",
-                                          style:
-                                              TextStyle(fontFamily: primaryFont),
-                                        ),
+                                        icon: Icon(Icons.send),
+                                        iconAlignment: IconAlignment.end,
+                                        style: ButtonStyle(
+                                            shape: WidgetStatePropertyAll(
+                                                RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(10))),
+                                            backgroundColor:
+                                                WidgetStatePropertyAll(Colors.blue),
+                                            foregroundColor: WidgetStatePropertyAll(
+                                                Colors.white)),
                                       ),
-                                      icon: Icon(Icons.send),
-                                      iconAlignment: IconAlignment.end,
-                                      style: ButtonStyle(
-                                          shape: WidgetStatePropertyAll(
-                                              RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10))),
-                                          backgroundColor:
-                                              WidgetStatePropertyAll(Colors.blue),
-                                          foregroundColor: WidgetStatePropertyAll(
-                                              Colors.white)),
-                                    ),
-                                  ],
-                                ));
-                      }).then((value) async {if (contactChange) await getContacts();});
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "+ New contact",
-                    style: TextStyle(fontFamily: primaryFont),
+                                    ],
+                                  ));
+                        }).then((value) async {if (contactChange) await getContacts();});
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      "+ New contact",
+                      style: TextStyle(fontFamily: primaryFont),
+                    ),
                   ),
+                  style: ButtonStyle(
+                      backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                      foregroundColor: WidgetStatePropertyAll(Colors.white),
+                      shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)))),
                 ),
-                style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
-                    foregroundColor: WidgetStatePropertyAll(Colors.white),
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)))),
               ),
-            ),
-            (gettingContacts) ? Padding(
-                          padding: const EdgeInsets.all(30.0),
-                          child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
-                        ) : Container()
-          ],
+              (gettingContacts) ? Padding(
+                            padding: const EdgeInsets.all(30.0),
+                            child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
+                          ) : Container()
+            ],
+          ),
         ),
       ),
     );
@@ -924,37 +930,39 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       onRefresh: () async {await getDocuments(true);},
       child: SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
-        child: (documents!.isEmpty)
-            ? Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                      child: Text(
-                        "You have no documents",
-                        style: TextStyle(fontFamily: primaryFont, fontSize: 20),
-                                    ),
-                    ),
-                  ],
-                ),
-              ],
-            )
-            : Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: documents!
-                  .map(
-                    (e) => documentCard(e["document_id"], e["status"],
-                        e["second"], e["is_device"], e["documents"], e["time"]),
-                  )
-                  .toList() + [(gettingDocuments) ? Padding(
-                    padding: const EdgeInsets.all(30.0),
-                    child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
-                  ) : Container()],
-            ),
+        child: Container(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          child: (documents!.isEmpty)
+              ? Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                        child: Text(
+                          "You have no documents",
+                          style: TextStyle(fontFamily: primaryFont, fontSize: 20),
+                                      ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+              : Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: documents!
+                    .map(
+                      (e) => documentCard(e["document_id"], e["status"],
+                          e["second"], e["is_device"], e["documents"], e["time"]),
+                    )
+                    .toList() + [(gettingDocuments) ? Padding(
+                      padding: const EdgeInsets.all(30.0),
+                      child: LoadingAnimationWidget.inkDrop(color: Colors.blue, size: 100),
+                    ) : Container()],
+              ),
+        ),
       ),
     );
   }
