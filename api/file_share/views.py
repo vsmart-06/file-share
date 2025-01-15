@@ -8,9 +8,9 @@ import smtplib
 from email.mime.text import MIMEText
 import datetime
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")
 
