@@ -785,6 +785,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         builder: (dialogContext) {
                           bool acted = false;
                           String downloaded = "";
+                          List downloadFiles = [];
 
                           return StatefulBuilder(
                             builder: (stateContext, setDialogState) => AlertDialog(
@@ -826,7 +827,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     
                                                       if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
                                                         await Gal.putImageBytes(bytes);
-                                                        setDialogState(() {downloaded = name;});
+                                                        setDialogState(() {downloaded = name; downloadFiles.add(name);});
                                                         return;
                                                       }
                                     
@@ -843,9 +844,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                         f.saveTo(path);
                                                       }
 
-                                                      if (path != null) setDialogState(() {downloaded = name;});
+                                                      if (path != null) setDialogState(() {downloaded = name; downloadFiles.add(name);});
                                                     },
-                                                    icon: Icon(Icons.download),
+                                                    icon: Icon((downloadFiles.contains(file["name"])) ? Icons.check : Icons.download, color: (downloadFiles.contains(file["name"])) ? Colors.green : Colors.black,),
                                                     splashRadius: 20,
                                                   )
                                                 ],
