@@ -22,7 +22,7 @@ class UserManager(BaseUserManager):
             except:
                 break
 
-        user: UserCredentials = self.model(username = username, email = email, time = datetime.datetime.now(tz = datetime.timezone.utc), code = code, **kwargs)
+        user: UserCredentials = self.model(username = username, email = email, timestamp = datetime.datetime.now(tz = datetime.timezone.utc), code = code, **kwargs)
         user.set_password(password)
 
         try:
