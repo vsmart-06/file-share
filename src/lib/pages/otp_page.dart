@@ -86,7 +86,7 @@ class _OtpPageState extends State<OtpPage> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 20.0),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Text(
                   "An email was sent with a 6 digit verification code. Enter that code to login",
                   style: TextStyle(fontFamily: primaryFont),
