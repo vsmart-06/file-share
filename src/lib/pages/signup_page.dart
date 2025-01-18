@@ -83,7 +83,7 @@ class _SignupState extends State<Signup> {
           ),
           centerTitle: true,
         ),
-        body: Center(
+        body: SingleChildScrollView(
           child: Column(
             children: [
               Padding(

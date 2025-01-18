@@ -80,7 +80,7 @@ class _LoginState extends State<Login> {
           ),
           centerTitle: true,
         ),
-        body: Center(
+        body: SingleChildScrollView(
           child: Column(
             children: [
               Padding(

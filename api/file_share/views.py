@@ -35,7 +35,6 @@ def signup(request: HttpRequest):
 
     try:
         user: UserCredentials = UserCredentials.objects.create_user(username = username, email = email, password = password)
-        user.save()
     except Exception:
         return JsonResponse({"error": "A user with that email already exists"}, status = 400)
     

@@ -82,7 +82,7 @@ class _OtpPageState extends State<OtpPage> {
           ),
           centerTitle: true,
         ),
-        body: Center(
+        body: SingleChildScrollView(
           child: Column(
             children: [
               Padding(
