@@ -36,7 +36,7 @@ def signup(request: HttpRequest):
     try:
         user: UserCredentials = UserCredentials.objects.create_user(username = username, email = email, password = password)
     except Exception:
-        return JsonResponse({"error": "A user with that email already exists"}, status = 400)
+        return JsonResponse({"error": "A user with that username or email already exists"}, status = 400)
     
     message = MIMEText(f"Your OTP is {user.code}", "html")
     message["Subject"] = "OTP"

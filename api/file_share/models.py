@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
         try:
             user.save(using = self._db)
         except:
-            raise Exception("A user with that email already exists")
+            raise Exception("A user with that username or email already exists")
 
         return user
     
