@@ -1100,7 +1100,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     super.initState();
     loadUserId();
     controller = TabController(length: 3, vsync: this);
-    controller.addListener(() => setState(() {}));
+    controller.addListener(() => setState(() {navigationBarIndex = controller.index;}));
   }
 
   @override
