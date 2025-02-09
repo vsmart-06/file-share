@@ -8,6 +8,7 @@ import smtplib
 from email.mime.text import MIMEText
 import datetime
 import os
+import json
 # from dotenv import load_dotenv
 
 # load_dotenv()
@@ -357,7 +358,7 @@ def share_documents(request: HttpRequest):
         except:
             return JsonResponse({"error": f"A user with this username does not exist"}, status = 400)
         
-    files = {"documents": base64.b64encode(request.FILES.get("zipped_file").read()).decode()}
+    files = {"documents": base64.b64encode(request.FILES.get("zipped_file").read()).decode(), "texts": json.loads(request.POST.get(request.POST.get("texts")))}
 
     share = SharedDocuments(sender_device = sender, sender_contact = user, data = files, timestamp = datetime.datetime.now(tz = datetime.timezone.utc))
     if device_id:
@@ -404,7 +405,7 @@ def get_documents(request: HttpRequest):
             second = b.name
             device = True
 
-        data.append({"document_id": x["document_id"], "status": "outgoing" if x["sender_device_id"] == user_device.device_id else "incoming", "second": second, "is_device": device, "documents": x["data"]["documents"], "time": x["timestamp"].strftime("%Y-%m-%d %H:%M:%S %z")})
+        data.append({"document_id": x["document_id"], "status": "outgoing" if x["sender_device_id"] == user_device.device_id else "incoming", "second": second, "is_device": device, "documents": x["data"]["documents"], "texts": x["data"]["texts"], "time": x["timestamp"].strftime("%Y-%m-%d %H:%M:%S %z")})
 
     return JsonResponse({"data": data})
 
