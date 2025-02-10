@@ -807,73 +807,78 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                           "Username: ${name}\n\nTime: ${DateTime.parse(time).toLocal()}",
                                           style: TextStyle(fontFamily: primaryFont)),
                                     ),
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: documents
-                                          .map((file) => Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    file["name"],
-                                                    style: TextStyle(
-                                                        fontFamily: primaryFont),
-                                                  ),
-                                                  IconButton(
-                                                    onPressed: () async {
-                                                      String name = file["name"];
-                                    
-                                                      var bytes =
-                                                          base64Decode(file["bytes"]);
-                                    
-                                                      if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
-                                                        await Gal.putImageBytes(bytes);
-                                                        setDialogState(() {downloaded = name; downloadFiles.add(name);});
-                                                        return;
-                                                      }
-                                    
-                                                      String? path = await FilePicker
-                                                          .platform
-                                                          .saveFile(
-                                                              dialogTitle: "Save File",
-                                                              fileName: name,
-                                                              bytes: bytes,
-                                                              lockParentWindow: true);
-                                                                
-                                                      if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
-                                                        XFile f = XFile.fromData(bytes);
-                                                        f.saveTo(path);
-                                                      }
-
-                                                      if (path != null) setDialogState(() {downloaded = name; downloadFiles.add(name);});
-                                                    },
-                                                    icon: Icon((downloadFiles.contains(file["name"])) ? Icons.check : Icons.download, color: (downloadFiles.contains(file["name"])) ? Colors.green : Colors.black,),
-                                                    splashRadius: 20,
-                                                  )
-                                                ],
-                                              ))
-                                          .toList() + texts.map((text) => Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    text,
-                                                    style: TextStyle(
-                                                        fontFamily: primaryFont),
-                                                  ),
-                                                  IconButton(
-                                                    onPressed: () async {
-                                                      await Clipboard.setData(ClipboardData(text: text));
-                                                      setDialogState(() {
-                                                        copied = text;
-                                                      });
-                                                    },
-                                                    icon: Icon((copied == text) ? Icons.check : Icons.copy_rounded, color: (copied == text) ? Colors.green : Colors.black,),
-                                                    splashRadius: 20,
-                                                  )
-                                                ],
-                                              )).toList()
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: documents
+                                            .map((file) => Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      file["name"],
+                                                      style: TextStyle(
+                                                          fontFamily: primaryFont),
+                                                    ),
+                                                    IconButton(
+                                                      tooltip: "Download",
+                                                      onPressed: () async {
+                                                        String name = file["name"];
+                                      
+                                                        var bytes =
+                                                            base64Decode(file["bytes"]);
+                                      
+                                                        if (["png", "jpg", "jpeg", "mov", "mpg", "mpeg"].contains(name.split(".")[name.split(".").length-1]) && (Platform.isIOS || Platform.isAndroid)) {
+                                                          await Gal.putImageBytes(bytes);
+                                                          setDialogState(() {downloaded = name; downloadFiles.add(name);});
+                                                          return;
+                                                        }
+                                      
+                                                        String? path = await FilePicker
+                                                            .platform
+                                                            .saveFile(
+                                                                dialogTitle: "Save File",
+                                                                fileName: name,
+                                                                bytes: bytes,
+                                                                lockParentWindow: true);
+                                                                  
+                                                        if (path != null && (!Platform.isIOS && !Platform.isAndroid)) {
+                                                          XFile f = XFile.fromData(bytes);
+                                                          f.saveTo(path);
+                                                        }
+                                      
+                                                        if (path != null) setDialogState(() {downloaded = name; downloadFiles.add(name);});
+                                                      },
+                                                      icon: Icon((downloadFiles.contains(file["name"])) ? Icons.check : Icons.download, color: (downloadFiles.contains(file["name"])) ? Colors.green : Colors.black,),
+                                                      splashRadius: 20,
+                                                    )
+                                                  ],
+                                                ))
+                                            .toList() + texts.map((text) => Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    SelectableText(
+                                                      text,
+                                                      style: TextStyle(
+                                                          fontFamily: primaryFont),
+                                                    ),
+                                                    IconButton(
+                                                      tooltip: "Copy",
+                                                      onPressed: () async {
+                                                        await Clipboard.setData(ClipboardData(text: text));
+                                                        setDialogState(() {
+                                                          copied = text;
+                                                        });
+                                                      },
+                                                      icon: Icon((copied == text) ? Icons.check : Icons.copy_rounded, color: (copied == text) ? Colors.green : Colors.black,),
+                                                      splashRadius: 20,
+                                                    )
+                                                  ],
+                                                )).toList()
+                                      ),
                                     ),
                                     (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
 
@@ -1136,7 +1141,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       appBar: AppBar(
         title: Text("Home", style: TextStyle(fontFamily: primaryFont)),
         centerTitle: true,
-        actions: [IconButton(splashRadius: 20, onPressed: () {getDevices(); getContacts(); getDocuments();}, icon: Icon(Icons.refresh)), LogoutButton()],
+        actions: [IconButton(tooltip: "Reload", splashRadius: 20, onPressed: () {getDevices(); getContacts(); getDocuments();}, icon: Icon(Icons.refresh)), LogoutButton()],
         bottom: (MediaQuery.of(context).orientation == Orientation.landscape) ? TabBar(
           controller: controller,
           tabs: [
@@ -1246,6 +1251,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                               textError = "";
                                               uploadError = "";
                                               recipientName = value;
+                                              generate = true;
                                             });
                                           },
                                         ),
@@ -1472,6 +1478,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                         fontFamily: primaryFont),
                                                   ),
                                                   IconButton(
+                                                    tooltip: "Remove",
                                                     onPressed: (sendingDocuments) ? () {} : () {setDialogState(() => files.remove(file));},
                                                     icon: Icon(Icons.close),
                                                     splashRadius: 20,
@@ -1490,6 +1497,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                         fontFamily: primaryFont),
                                                   ),
                                                   IconButton(
+                                                    tooltip: "Remove",
                                                     onPressed: (sendingDocuments) ? () {} : () {setDialogState(() => texts.remove(text));},
                                                     icon: Icon(Icons.close),
                                                     splashRadius: 20,
