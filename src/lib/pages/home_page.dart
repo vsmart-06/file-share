@@ -6,6 +6,7 @@ import "package:file_share/services/device_info.dart";
 import "package:file_share/services/secure_storage.dart";
 import "package:file_share/widgets/logout_button.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:google_fonts/google_fonts.dart";
 import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:http/http.dart";
@@ -757,7 +758,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget documentCard(int document_id, String status, String name,
-      bool is_device, List documents, String time) {
+      bool is_device, List documents, List texts, String time) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
       child: Row(
@@ -785,6 +786,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         builder: (dialogContext) {
                           bool acted = false;
                           String downloaded = "";
+                          String copied = "";
                           List downloadFiles = [];
 
                           return StatefulBuilder(
@@ -851,7 +853,27 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                   )
                                                 ],
                                               ))
-                                          .toList()
+                                          .toList() + texts.map((text) => Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    text,
+                                                    style: TextStyle(
+                                                        fontFamily: primaryFont),
+                                                  ),
+                                                  IconButton(
+                                                    onPressed: () async {
+                                                      await Clipboard.setData(ClipboardData(text: text));
+                                                      setDialogState(() {
+                                                        copied = text;
+                                                      });
+                                                    },
+                                                    icon: Icon((copied == text) ? Icons.check : Icons.copy_rounded, color: (copied == text) ? Colors.green : Colors.black,),
+                                                    splashRadius: 20,
+                                                  )
+                                                ],
+                                              )).toList()
                                     ),
                                     (acted) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container(),
 
@@ -893,7 +915,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             fontFamily: primaryFont,
                           ),
                         ),
-                        Text("${documents.length} document${(documents.length > 1) ? 's' : ''}",
+                        Text((texts.length * documents.length != 0) ? ("${documents.length} document${(documents.length > 1) ? 's' : ''} and ${texts.length} text${(texts.length > 1) ? 's' : ''}") : (texts.length == 0) ? ("${documents.length} document${(documents.length > 1) ? 's' : ''}") : ("${texts.length} text${(texts.length > 1) ? 's' : ''}"),
                             style: TextStyle(
                                 color: Colors.black, fontFamily: primaryFont)),
                       ],
@@ -908,7 +930,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             fontFamily: primaryFont,
                           ),
                         ),
-                        Text("${documents.length} document${(documents.length > 1) ? 's' : ''}",
+                        Text((texts.length * documents.length != 0) ? ("${documents.length} document${(documents.length > 1) ? 's' : ''} and ${texts.length} text${(texts.length > 1) ? 's' : ''}") : (texts.length == 0) ? ("${documents.length} document${(documents.length > 1) ? 's' : ''}") : ("${texts.length} text${(texts.length > 1) ? 's' : ''}"),
                             style: TextStyle(
                                 color: Colors.black, fontFamily: primaryFont)),
                       ],
@@ -956,7 +978,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 children: documents!
                     .map(
                       (e) => documentCard(e["document_id"], e["status"],
-                          e["second"], e["is_device"], e["documents"], e["time"]),
+                          e["second"], e["is_device"], (e["documents"] == null) ? [] : e["documents"], (e["texts"] == null) ? [] : e["texts"], e["time"]),
                     )
                     .toList() + [(gettingDocuments) ? Padding(
                       padding: const EdgeInsets.all(30.0),
@@ -1153,12 +1175,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   bool generate = true;
                   String recipientName = "";
     
+                  String currentText = "";
+                  bool addText = false;
+                  List<String> texts = [];
+                  bool duplicateText = false;
+
                   Map files = {};
-                  String fileError = "";
+                  String uploadError = "";
     
-                  bool sendingFile = false;
+                  bool sendingDocuments = false;
     
-                  TextEditingController controller = TextEditingController();
+                  TextEditingController recipientController = TextEditingController();
+                  TextEditingController textController = TextEditingController();
                   return StatefulBuilder(
                       builder: (stateContext, setDialogState) => AlertDialog(
                             shape: RoundedRectangleBorder(
@@ -1181,7 +1209,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                             device = !device;
                                             generate = true;
                                             textError = "";
-                                            fileError = "";
+                                            uploadError = "";
                                           });
                                         }),
                                         recipientButton("User", !device, () {
@@ -1189,7 +1217,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                             device = !device;
                                             generate = true;
                                             textError = "";
-                                            fileError = "";
+                                            uploadError = "";
                                           });
                                         }),
                                       ],
@@ -1200,7 +1228,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     child: Column(
                                       children: [
                                         TextFormField(
-                                          controller: controller,
+                                          controller: recipientController,
                                           decoration: InputDecoration(
                                             labelText: "Recipient",
                                             hintText: "Recipient",
@@ -1216,7 +1244,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                           onChanged: (value) {
                                             setDialogState(() {
                                               textError = "";
-                                              fileError = "";
+                                              uploadError = "";
                                               recipientName = value;
                                             });
                                           },
@@ -1227,7 +1255,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                 recipientName,
                                                 device,
                                                 (text) => setDialogState(() {
-                                                      controller.text = text;
+                                                      recipientController.text = text;
                                                       generate = false;
                                                       recipientName = text;
                                                     }))
@@ -1235,12 +1263,100 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       ],
                                     ),
                                   ),
+                                  (addText) ? Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: TextFormField(
+                                            controller: textController,
+                                            decoration: InputDecoration(
+                                              labelText: "Text",
+                                              hintText: "Text",
+                                              errorText: (duplicateText)
+                                                  ? "You have already added this text"
+                                                  : null,
+                                              errorStyle: TextStyle(
+                                                  fontFamily: primaryFont),
+                                              border: OutlineInputBorder(),
+                                            ),
+                                            style:
+                                                TextStyle(fontFamily: primaryFont),
+                                            onChanged: (value) {
+                                              setDialogState(() {
+                                                uploadError = "";
+                                                currentText = value;
+                                                duplicateText = false;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 5),
+                                          child: IconButton(onPressed: () {
+                                            if (currentText.isNotEmpty) {
+                                              if (texts.contains(currentText)) {
+                                                setDialogState(() {
+                                                  duplicateText = true;
+                                                });
+                                                return;
+                                              }
+                                              setDialogState(() {
+                                                texts.add(currentText);
+                                                textController.clear();
+                                                addText = false;
+                                                currentText = "";
+                                              });
+                                            }
+                                          }, icon: Icon(Icons.check),
+                                          color: Colors.green,
+                                          splashRadius: 20,),
+                                        )
+                                      ],
+                                    ),
+                                  ) : Container(),
+                                  Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: TextButton(
+                                      onPressed: () async {
+                                        if (addText) return;
+                                        if (texts.length == 5) {
+                                          setDialogState(() {
+                                            uploadError = "You can send a maximum of 5 texts at a time";
+                                          });
+                                          return;
+                                        }
+                                        setDialogState(() {
+                                          uploadError = "";
+                                          addText = true;
+                                        });
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Text(
+                                          "Add text",
+                                          style:
+                                              TextStyle(fontFamily: primaryFont),
+                                        ),
+                                      ),
+                                      style: ButtonStyle(
+                                          shape: WidgetStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10))),
+                                          backgroundColor:
+                                              WidgetStatePropertyAll(Colors.blue),
+                                          foregroundColor: WidgetStatePropertyAll(
+                                              Colors.white)),
+                                    ),
+                                  ),
                                   Padding(
                                     padding: EdgeInsets.all(10),
                                     child: TextButton(
                                       onPressed: () async {
                                         setDialogState(() {
-                                          fileError = "";
+                                          uploadError = "";
                                         });
                               
                                         FilePickerResult? result =
@@ -1255,7 +1371,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                               files[f.name] = f.bytes;
                                             } else {
                                               setDialogState(() {
-                                                fileError =
+                                                uploadError =
                                                     "You can send a maximum of 5 documents at a time";
                                               });
                                               break;
@@ -1291,7 +1407,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                           child: TextButton(
                                             onPressed: () async {
                                               setDialogState(() {
-                                                fileError = "";
+                                                uploadError = "";
                                               });
                               
                                               ImagePicker picker = ImagePicker();
@@ -1305,7 +1421,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                         await f.readAsBytes();
                                                   } else {
                                                     setDialogState(() {
-                                                      fileError =
+                                                      uploadError =
                                                           "You can send a maximum of 5 documents at a time";
                                                     });
                                                     break;
@@ -1356,31 +1472,49 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                                         fontFamily: primaryFont),
                                                   ),
                                                   IconButton(
-                                                    onPressed: (sendingFile) ? () {} : () {setDialogState(() => files.remove(file));},
+                                                    onPressed: (sendingDocuments) ? () {} : () {setDialogState(() => files.remove(file));},
                                                     icon: Icon(Icons.close),
                                                     splashRadius: 20,
                                                   )
                                                 ],
                                               ))
-                                          .toList(),
+                                          .toList() + texts.map(
+                                            (text) => Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  SelectableText(
+                                                    text,
+                                                    style: TextStyle(
+                                                        fontFamily: primaryFont),
+                                                  ),
+                                                  IconButton(
+                                                    onPressed: (sendingDocuments) ? () {} : () {setDialogState(() => texts.remove(text));},
+                                                    icon: Icon(Icons.close),
+                                                    splashRadius: 20,
+                                                  )
+                                                ],
+                                              )
+                                          ).toList(),
                                     ),
                                   ),
-                                  (fileError.isNotEmpty)
+                                  (uploadError.isNotEmpty)
                                       ? Padding(
                                           padding: EdgeInsets.all(10),
                                           child: Text(
-                                            fileError,
+                                            uploadError,
                                             style: TextStyle(
                                                 fontFamily: primaryFont,
                                                 color: Colors.red),
                                           ),
                                         )
                                       : Container(),
-                                  (sendingFile) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
+                                  (sendingDocuments) ? Padding(padding: EdgeInsets.all(10), child: LoadingAnimationWidget.staggeredDotsWave(color: Colors.blue, size: 50)) : Container()
                                 ],
                               ),
                             ),
-                            actions: (sendingFile) ? [] : [
+                            actions: (sendingDocuments) ? [] : [
                               TextButton.icon(
                                 onPressed: () async {
                                   bool flag = false;
@@ -1408,20 +1542,20 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                     setDialogState(() {
                                       textError =
                                           "This ${(device) ? 'device' : 'user'} does not exist";
-                                      fileError = "";
+                                      uploadError = "";
                                     });
                                     return;
                                   }
     
-                                  if (files.isEmpty) {
+                                  if (files.isEmpty && texts.isEmpty) {
                                     setDialogState(() {
                                       textError = "";
-                                      fileError = "No files have been uploaded";
+                                      uploadError = "No files have been uploaded";
                                     });
                                     return;
                                   }
     
-                                  setDialogState(() {sendingFile = true;});
+                                  setDialogState(() {sendingDocuments = true;});
     
                                   Archive archive = Archive();
                                   for (String file in files.keys) {
@@ -1441,16 +1575,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         device_id.toString();
                                   else
                                     request.fields["username"] = recipientName;
-    
+
+                                  request.fields["texts"] = jsonEncode(texts);
+
                                   var response = await Response.fromStream(
                                       await request.send());
     
-                                  setDialogState(() {sendingFile = false;});
+                                  setDialogState(() {sendingDocuments = false;});
     
                                   if (response.statusCode != 200) {
                                     setDialogState(() {
                                       textError = "";
-                                      fileError =
+                                      uploadError =
                                           jsonDecode(response.body)["error"];
                                     });
                                   } else {
