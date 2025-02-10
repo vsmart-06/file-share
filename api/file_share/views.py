@@ -358,7 +358,7 @@ def share_documents(request: HttpRequest):
         except:
             return JsonResponse({"error": f"A user with this username does not exist"}, status = 400)
         
-    files = {"documents": base64.b64encode(request.FILES.get("zipped_file").read()).decode(), "texts": json.loads(request.POST.get(request.POST.get("texts")))}
+    files = {"documents": base64.b64encode(request.FILES.get("zipped_file").read()).decode(), "texts": json.loads(request.POST.get("texts"))}
 
     share = SharedDocuments(sender_device = sender, sender_contact = user, data = files, timestamp = datetime.datetime.now(tz = datetime.timezone.utc))
     if device_id:
