@@ -405,7 +405,9 @@ def get_documents(request: HttpRequest):
             second = b.name
             device = True
 
-        data.append({"document_id": x["document_id"], "status": "outgoing" if x["sender_device_id"] == user_device.device_id else "incoming", "second": second, "is_device": device, "documents": x["data"]["documents"], "texts": x["data"]["texts"], "time": x["timestamp"].strftime("%Y-%m-%d %H:%M:%S %z")})
+        documents: dict = json.loads(x["data"])
+
+        data.append({"document_id": x["document_id"], "status": "outgoing" if x["sender_device_id"] == user_device.device_id else "incoming", "second": second, "is_device": device, "documents": documents.get("documents"), "texts": documents.get("texts"), "time": x["timestamp"].strftime("%Y-%m-%d %H:%M:%S %z")})
 
     return JsonResponse({"data": data})
 
